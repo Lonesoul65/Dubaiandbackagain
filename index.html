@@ -1,0 +1,3460 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Nyx Trip Offline — V5 Functional</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{--bg:#0b0f14;--card:rgba(18,24,36,.85);--text:#e8eef7;--muted:#93a4b8;--border:rgba(255,255,255,.12);--accent:#6aa9ff;--shadow:0 18px 50px rgba(0,0,0,.35);--radius:18px}
+*{box-sizing:border-box}
+body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(900px 700px at 20% 0%,#111b2b,var(--bg));color:var(--text)}
+header{position:sticky;top:0;z-index:50;padding:14px 14px 10px;backdrop-filter:blur(12px);background:rgba(11,15,20,.72);border-bottom:1px solid var(--border)}
+.wrap{max-width:1000px;margin:0 auto}
+.title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.titleText{font-size:18px;font-weight:950;letter-spacing:.2px}
+.badge{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(18,24,36,.65);font-size:12px;color:var(--muted)}
+.badge.ok{color:#dbe6f7;border-color:rgba(85,209,143,.55);}
+.badge.bad{color:#ffd0d0;border-color:rgba(255,107,107,.55);}
+.sub{color:var(--muted);font-size:12.8px;margin-top:6px}
+.tabs{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.tab{padding:9px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(18,24,36,.65);color:var(--text);font-weight:900;font-size:12.5px;cursor:pointer;user-select:none}
+.tab.active{border-color:rgba(106,169,255,.7);box-shadow:0 0 0 2px rgba(106,169,255,.14) inset}
+main{padding:14px;padding-bottom:96px}
+.card{border:1px solid var(--border);background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.pad{padding:14px}
+.btn{padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:rgba(18,24,36,.65);color:var(--text);font-weight:900;font-size:13px;cursor:pointer}
+.hero{padding:14px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(106,169,255,.25),rgba(255,204,102,.15),rgba(0,0,0,0))}
+.heroTitle{font-size:20px;font-weight:1000}
+.heroWhere{font-size:13px;color:rgba(232,238,247,.78);margin-top:4px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.navMid{font-weight:1000}
+.pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.pill{padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(0,0,0,.16);font-size:12.5px;color:#dbe6f7}
+.section{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+.section h3{margin:0 0 8px 0;font-size:14px}
+.agenda{display:grid;gap:10px}
+.step{padding:10px 10px;border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,.16)}
+.stepTop{display:flex;justify-content:space-between;gap:10px}
+.stepTime{font-weight:1000;color:var(--accent)}
+.stepTitle{font-weight:1000}
+.stepDetails{margin-top:6px;color:#dbe6f7;font-size:12.8px;line-height:1.35}
+details{border:1px solid var(--border);border-radius:14px;padding:10px 10px;background:rgba(0,0,0,.14)}
+summary{cursor:pointer;font-weight:1000;list-style:none}
+summary::-webkit-details-marker{display:none}
+.ul{margin:8px 0 0 18px;padding:0}
+.ul li{margin:7px 0}
+textarea.note{width:100%;min-height:96px;margin-top:10px;padding:10px 10px;border-radius:14px;border:1px solid var(--border);background:rgba(0,0,0,.18);color:var(--text);font-size:13px}
+.grid{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+.smallCardTitle{font-weight:1000}
+.smallMeta{color:var(--muted);font-size:12.5px;margin-top:6px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:80;background:rgba(18,24,36,.92);border:1px solid var(--border);padding:10px 12px;border-radius:12px;color:var(--text);font-size:12.5px;max-width:min(92vw,520px);display:none}
+input[type="search"]{width:100%;padding:12px 12px;border-radius:12px;border:1px solid var(--border);background:rgba(18,24,36,.65);color:var(--text);outline:none;font-size:14px}
+
+/* Bottom nav + modal day picker */
+.bottomNav{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(11,15,20,.78);border-top:1px solid var(--border);backdrop-filter:blur(12px);z-index:90}
+.bottomRow{max-width:1000px;margin:0 auto;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.navBtn{flex:1;padding:12px 12px;border-radius:14px;border:1px solid var(--border);background:rgba(18,24,36,.70);color:var(--text);font-weight:950;cursor:pointer}
+.navBtn.primary{border-color:rgba(106,169,255,0.70);box-shadow:0 0 0 2px rgba(106,169,255,0.14) inset}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.60);display:none;z-index:100}
+.modalCard{max-width:760px;margin:10vh auto 0;border:1px solid var(--border);background:rgba(18,24,36,0.92);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.modalHead{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modalBody{padding:12px 14px;max-height:60vh;overflow:auto}
+.dayItem{padding:12px 12px;border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,0.16);cursor:pointer;margin-bottom:10px}
+.dayItemTop{display:flex;justify-content:space-between;gap:10px}
+.dayItemTitle{font-weight:950}
+.dayItemMeta{color:var(--muted);font-size:12.6px;margin-top:6px}
+
+/* --- V11 polish: collapsibles --- */
+details { transition: background .18s ease; }
+details[open] { background: rgba(0,0,0,0.18); }
+summary { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+summary::after { content:"▾"; color: var(--muted); font-weight:1000; }
+details[open] summary::after { content:"▴"; }
+
+
+/* --- Wave 1 UI polish (v12) --- */
+:root{
+  --glass: rgba(18,24,36,.72);
+  --glass2: rgba(18,24,36,.58);
+  --shadow2: 0 20px 70px rgba(0,0,0,.45);
+}
+body{background:
+  radial-gradient(1100px 700px at 20% 0%, #13213a, transparent 60%),
+  radial-gradient(900px 600px at 80% 10%, rgba(106,169,255,.18), transparent 55%),
+  radial-gradient(900px 700px at 60% 120%, rgba(255,204,102,.10), transparent 60%),
+  var(--bg);
+}
+header{border-bottom:1px solid rgba(255,255,255,.10);}
+.card{box-shadow:var(--shadow2);}
+.hero{
+  position: relative;
+  padding: 18px 16px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  overflow:hidden;
+}
+.hero::before{
+  content:"";
+  position:absolute; inset:-40px -40px -40px -40px;
+  background:
+    radial-gradient(500px 280px at 20% 20%, rgba(106,169,255,.32), transparent 60%),
+    radial-gradient(520px 320px at 80% 10%, rgba(255,204,102,.22), transparent 62%),
+    radial-gradient(620px 420px at 60% 80%, rgba(85,209,143,.16), transparent 62%);
+  filter: blur(8px);
+  opacity: .95;
+
+  pointer-events:none;
+}
+.heroInner{position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:14px;}
+.heroLeft{min-width:0;}
+.heroTitle{font-size:22px; line-height:1.05; letter-spacing:.2px}
+.heroWhere{font-size:13px; color: rgba(232,238,247,.80)}
+.focusPill{display:inline-flex; gap:8px; align-items:center; margin-top:10px;
+  padding:9px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.14);
+  background: rgba(11,15,20,.28);
+  font-weight:950; font-size:12.6px; color:#e8eef7;
+}
+.focusDot{width:8px;height:8px;border-radius:99px;background:rgba(106,169,255,.92); box-shadow:0 0 0 4px rgba(106,169,255,.12);}
+.heroRight{display:flex; flex-direction:column; align-items:flex-end; gap:10px; flex:0 0 auto;}
+.ringWrap{display:flex; align-items:center; gap:10px;}
+.ringText{font-size:12.5px; color: rgba(232,238,247,.78); text-align:right}
+.ringText b{color:#e8eef7}
+.ring{width:46px;height:46px}
+.ring circle{fill:none; stroke-width:5}
+.ring .bg{stroke: rgba(255,255,255,.14)}
+.ring .fg{stroke: rgba(106,169,255,.95); stroke-linecap:round; transform: rotate(-90deg); transform-origin: 50% 50%;}
+.nextCard{
+  margin-top: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.16);
+  border-radius: 16px;
+  padding: 12px 12px;
+  position:relative;
+}
+.nextTop{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.nextLabel{font-weight:1000; font-size:12.5px; color: rgba(232,238,247,.80)}
+.nextTime{font-weight:1000; color: var(--accent)}
+.nextTitle{font-weight:1000; margin-top:6px}
+.nextMeta{margin-top:6px; color: rgba(232,238,247,.78); font-size:12.8px; line-height:1.35}
+.section{border-top:1px solid rgba(255,255,255,.10)}
+.step{background: rgba(0,0,0,.14); border-color: rgba(255,255,255,.12)}
+.btn, .navBtn{transition: transform .08s ease, background .18s ease, border-color .18s ease}
+.btn:active, .navBtn:active{transform: scale(.98)}
+.bottomNav{background: rgba(11,15,20,.82);}
+.navBtn.primary{background: rgba(106,169,255,.18)}
+/* collapsibles nicer */
+details { transition: background .18s ease; }
+details[open] { background: rgba(0,0,0,0.18); }
+summary { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+summary::after { content:"▾"; color: var(--muted); font-weight:1000; }
+details[open] summary::after { content:"▴"; }
+/* immersive day */
+body.dayImmersive header{opacity:.92}
+body.dayImmersive header .sub{opacity:.85}
+
+
+/* --- Wave 2 (v13) --- */
+.actionsRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+.actionBtn{
+  padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.12);
+  background: rgba(18,24,36,.55);
+  color: var(--text); font-weight:1000; font-size:12.8px;
+  cursor:pointer; user-select:none;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.actionBtn.primary{border-color:rgba(106,169,255,.55); background: rgba(106,169,255,.16);}
+.actionBtn:active{transform:scale(.98)}
+.kv{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+.kv .pill{background:rgba(0,0,0,.14)}
+.switchRow{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 10px; border:1px solid rgba(255,255,255,.12); border-radius:14px; background:rgba(0,0,0,.12); margin-top:10px}
+.switchRow .lbl{font-weight:1000}
+.switchRow .meta{color:rgba(232,238,247,.70); font-size:12.5px; margin-top:3px}
+.switchRow input{transform:scale(1.15)}
+.chip{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.14); font-size:12.5px; font-weight:950}
+.smallLink{color:rgba(106,169,255,.92); text-decoration:none; font-weight:950}
+.smallLink:active{text-decoration:underline}
+
+
+/* === Safe polish pack (v1) === */
+:root{
+  --glass: rgba(18,24,36,.70);
+  --glass2: rgba(18,24,36,.52);
+  --shadow2: 0 18px 60px rgba(0,0,0,.42);
+}
+body{
+  background:
+    radial-gradient(1100px 700px at 20% 0%, #13213a, transparent 60%),
+    radial-gradient(900px 600px at 80% 10%, rgba(106,169,255,.16), transparent 55%),
+    radial-gradient(900px 700px at 60% 120%, rgba(255,204,102,.10), transparent 60%),
+    var(--bg);
+}
+.card{ box-shadow: var(--shadow2); }
+.btn, .navBtn{ transition: transform .08s ease, background .18s ease, border-color .18s ease; }
+.btn:active, .navBtn:active{ transform: scale(.98); }
+
+/* Network chip */
+.chip{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 10px; border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.14);
+  font-size:12.5px; font-weight:950;
+  color: rgba(232,238,247,.92);
+}
+
+/* Intro overlay */
+#introOverlay .card{ overflow:hidden; }
+#introOverlay .hero{ position:relative; padding: 20px 16px 18px; border-bottom:1px solid rgba(255,255,255,.10); }
+#introOverlay .hero::before{
+  content:""; position:absolute; inset:-40px;
+  background:
+    radial-gradient(520px 320px at 20% 20%, rgba(106,169,255,.32), transparent 60%),
+    radial-gradient(520px 320px at 80% 10%, rgba(255,204,102,.22), transparent 62%),
+    radial-gradient(620px 420px at 60% 80%, rgba(85,209,143,.16), transparent 62%);
+  filter: blur(10px);
+  pointer-events:none;
+}
+#introOverlay .heroInner{ position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+#introDots > div{ transition:.18s; }
+
+
+/* === Safe v2 (fixed): make days visually distinct without touching core logic === */
+#viewDay{ position:relative; overflow:hidden; }
+#viewDay::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:6px;
+  background: rgba(255,255,255,.10);
+  pointer-events:none;
+}
+#viewDay[data-type="flight"]::before{ background: linear-gradient(180deg, rgba(106,169,255,.95), rgba(106,169,255,.20)); }
+#viewDay[data-type="hotel"]::before{ background: linear-gradient(180deg, rgba(85,209,143,.92), rgba(85,209,143,.18)); }
+#viewDay[data-type="transfer"]::before{ background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.14)); }
+#viewDay[data-region="Maldives"]::before{ background: linear-gradient(180deg, rgba(120,180,255,.95), rgba(120,180,255,.18)); }
+#viewDay[data-region="UAE"][data-type="hotel"]::before{ background: linear-gradient(180deg, rgba(85,209,143,.92), rgba(255,204,102,.20)); }
+
+.badges{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 10px; border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.14);
+  font-size:12.5px; font-weight:1000;
+}
+.badge .dot{width:8px;height:8px;border-radius:999px; background: rgba(255,255,255,.35)}
+.badge.flight .dot{ background: rgba(106,169,255,.95) }
+.badge.hotel  .dot{ background: rgba(85,209,143,.92) }
+.badge.desert .dot{ background: rgba(255,204,102,.92) }
+.badge.maldives .dot{ background: rgba(120,180,255,.92) }
+.badge.transfer .dot{ background: rgba(255,255,255,.55) }
+
+.hotelLine{ margin-top:10px; padding:10px 12px; border-radius:14px;
+  border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.12);
+}
+.hotelName{ font-weight:1100; }
+.hotelMeta{ color: rgba(232,238,247,.72); font-size:12.6px; margin-top:4px; line-height:1.35; }
+
+
+/* === Safe v3: section emphasis + day-type theming (CSS only) === */
+#viewDay{
+  --accent: rgba(85,209,143,.92);         /* hotel default */
+  --accentSoft: rgba(85,209,143,.12);
+}
+#viewDay[data-type="flight"]{ --accent: rgba(106,169,255,.95); --accentSoft: rgba(106,169,255,.14); }
+#viewDay[data-type="transfer"]{ --accent: rgba(255,255,255,.70); --accentSoft: rgba(255,255,255,.10); }
+#viewDay[data-region="Maldives"]{ --accent: rgba(120,180,255,.95); --accentSoft: rgba(120,180,255,.14); }
+#viewDay[data-region="UAE"][data-type="hotel"]{ --accent: rgba(255,204,102,.92); --accentSoft: rgba(255,204,102,.12); }
+
+/* "Today’s plan" header */
+#viewDay .section > h3{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.14);
+  margin-bottom: 10px;
+}
+#viewDay .section > h3::before{
+  content:"";
+  width:10px; height:10px; border-radius:999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px var(--accentSoft);
+}
+
+/* Details summaries = cards */
+#viewDay details{
+  border-color: rgba(255,255,255,.12);
+  background: rgba(0,0,0,.08);
+}
+#viewDay details > summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.10);
+}
+#viewDay details > summary::before{
+  /* day-type icon (light touch) */
+  content: "🏨";
+  margin-right:10px;
+}
+#viewDay[data-type="flight"] details > summary::before{ content:"✈️"; }
+#viewDay[data-type="transfer"] details > summary::before{ content:"🚗"; }
+#viewDay[data-region="Maldives"] details > summary::before{ content:"🌊"; }
+#viewDay[data-region="UAE"][data-type="hotel"] details > summary::before{ content:"🕌"; }
+
+/* Make the open state pop */
+#viewDay details[open]{
+  box-shadow: 0 12px 34px rgba(0,0,0,.30);
+}
+#viewDay details[open] > summary{
+  border: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(180deg, rgba(0,0,0,.14), rgba(0,0,0,.10));
+}
+
+/* Tip list bullets nicer */
+#viewDay ul.ul li{
+  position:relative;
+  padding-left: 18px;
+}
+#viewDay ul.ul li::before{
+  content:"";
+  position:absolute;
+  left: 4px;
+  top: 0.72em;
+  width:6px; height:6px;
+  border-radius:999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 5px var(--accentSoft);
+}
+
+/* Subtle emphasis for key info rows in hotelDetails */
+#hotelDetails .row{
+  border-left: 3px solid rgba(255,255,255,.06);
+}
+#viewDay #hotelDetails .row .k{
+  color: rgba(232,238,247,.92);
+}
+
+
+/* === Safe v7: quick list rows === */
+.qRow{ padding:12px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.10); margin-bottom:10px; cursor:pointer; }
+.qTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.qDay{ font-weight:1100; }
+.qMeta{ color: rgba(232,238,247,.72); font-size:12.6px; margin-top:6px; line-height:1.35; }
+.qTags{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+
+
+/* === Safe v7.1: header layout cleanup === */
+header .wrap{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+}
+.title{ min-width:0; }
+.headerActions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.btnSmall{
+  padding:8px 10px;
+  border-radius:999px;
+}
+@media (max-width: 720px){
+  header .wrap{ flex-direction:column; align-items:stretch; }
+  .tabs{ justify-content:flex-start; }
+}
+
+
+/* === Safe v8: Overview tab === */
+.oBlock{ padding:14px; border-radius:18px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.10); cursor:pointer; }
+.oTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.oTitle{ font-weight:1100; line-height:1.2; }
+.oRange{ color: rgba(232,238,247,.70); font-size:12.5px; }
+.oMeta{ margin-top:8px; color: rgba(232,238,247,.78); font-size:12.8px; line-height:1.35; }
+.oTags{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.oDayRow{ padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.08); margin-bottom:8px; cursor:pointer; }
+.oDayRow:hover,.oBlock:hover{ background: rgba(0,0,0,.14); }
+
+
+/* === Safe v9: status light + simplified tabs === */
+.netLight{
+  width:10px; height:10px; border-radius:999px;
+  display:inline-block;
+  background: rgba(255,70,70,.95);
+  box-shadow: 0 0 0 6px rgba(255,70,70,.12);
+}
+.netLight.on{
+  background: rgba(85,209,143,.95);
+  box-shadow: 0 0 0 6px rgba(85,209,143,.14);
+}
+.netLight.off{
+  background: rgba(255,70,70,.95);
+  box-shadow: 0 0 0 6px rgba(255,70,70,.12);
+}
+.netText{
+  font-weight: 1000;
+  color: rgba(232,238,247,.80);
+  font-size: 12.5px;
+}
+header .tabs{
+  margin-top:10px;
+  border-radius: 18px;
+  padding:6px;
+  background: rgba(0,0,0,.14);
+  border: 1px solid rgba(255,255,255,.10);
+}
+header .tab{
+  flex:1;
+  text-align:center;
+  padding:10px 10px;
+  border-radius: 14px;
+}
+
+
+/* === Safe v9.1: declutter + high-tech minimal === */
+.headerActions{ gap:8px; }
+.netText{ opacity:.78; letter-spacing:.2px; }
+.tabs{ gap:6px; }
+.tab{ font-weight:1000; letter-spacing:.2px; }
+
+
+/* === Safe v11: Tools as pages (no giant scroll) === */
+.toolsShell{ max-height: 80vh; overflow:hidden; display:flex; flex-direction:column; }
+.toolsNav{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.toolsNav .tbtn{ padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.10); color:rgba(232,238,247,.90); font-weight:1000; cursor:pointer; }
+.toolsNav .tbtn.active{ background:rgba(85,209,143,.18); border-color:rgba(85,209,143,.45); }
+.toolsBody{ overflow:auto; padding:0 16px 16px; }
+.toolPage{ display:none; }
+.toolPage.active{ display:block; }
+@media (max-width:720px){
+  .toolsShell{ max-height: 85vh; }
+}
+
+</style></head>
+<body>
+<header><div class="wrap">
+  <div class="title">
+    <div class="titleText">Dubai and Back Again</div>
+    <div class="headerActions">
+      <span class="netLight" id="netLight" title="Connectivity"></span><span class="netText" id="netText">Offline</span>
+<button class="btn btnSmall" id="btnPreload" style="display:none;">⚡ Preload</button>
+    </div>
+    
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tabOverview">Overview</div>
+    <div class="tab" id="tabDay">Day</div>
+    <div class="tab" id="tabToolsTab">Tools</div>
+  </div>
+</div></header>
+
+<main class="wrap">
+  
+  
+  <div id="viewOverview" style="margin-top:12px;">
+    <div class="card pad" style="margin-bottom:12px;">
+      <div class="smallCardTitle" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <span>Trip at a Glance</span>
+        <button class="btn btnSmall" id="btnOverviewJump">Jump to day</button>
+      </div>
+      <div class="smallMeta" style="margin-top:6px;">Compressed timeline. Tap a block or a day to drill into details.</div>
+    </div>
+    <div class="grid" id="overviewGrid"></div>
+    <div class="card pad" style="margin-top:12px;">
+      <div class="smallCardTitle">All Days (tap to open)</div>
+      <div class="smallMeta" style="margin-top:6px;">Fast list view. Search is in Quick.</div>
+      <div id="overviewDays" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+
+  <div id="viewDay" class="card">
+    <div class="hero">
+      <div class="heroInner">
+        <div class="heroLeft">
+          <div class="heroTitle" id="heroTitle"></div>
+          <div class="heroWhere" id="heroWhere"></div>
+          <div id="badgeHost"></div>
+          <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;"><button class="btn primary" id="btnCheckIn" style="border-radius:999px; padding:8px 10px;">✅ Check in</button><span class="chip" id="ciStatusChip" style="display:none;">Checked in</span></div>
+          <div class="focusPill" id="todayFocusPill"><span class="focusDot"></span><span id="todayFocus"></span></div>
+        </div>
+        <div class="heroRight">
+          <div class="ringWrap" title="Trip progress & day completion">
+            <svg class="ring" viewBox="0 0 36 36" aria-hidden="true">
+              <circle class="bg" cx="18" cy="18" r="15.915"></circle>
+              <circle class="fg" cx="18" cy="18" r="15.915" stroke-dasharray="0 100"></circle>
+            </svg>
+            <div class="ringText">
+              <div><b id="ringDay">Day</b> <span id="ringOf">of</span></div>
+              <div id="ringSub">Progress</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nextCard" id="nextCard">
+        <div class="nextTop">
+          <div class="nextLabel">Next up</div>
+          <div class="nextTime" id="nextTime">—</div>
+        </div>
+        <div class="nextTitle" id="nextTitle">—</div>
+        <div class="nextMeta" id="nextMeta"></div>
+      </div>
+
+      <div class="actionsRow" id="actionsRow"></div>
+    </div>
+    <div class="pad">
+
+      <div class="nav">
+        <button class="btn" id="prev">← Prev</button>
+        <div class="navMid" id="navMid">Day</div>
+        <button class="btn" id="next">Next →</button>
+      </div>
+      <div class="pills" id="pills"></div>
+
+      <div class="section">
+        <h3>Today’s plan</h3>
+        <div class="agenda" id="agenda"></div>
+      </div>
+
+      <div class="section">
+        <details><summary>More details</summary>
+          <div class="smallMeta" id="dayDetails"></div>
+        </details>
+      </div>
+
+
+      <div class="section">
+        <details><summary>Pro tips</summary><ul class="ul" id="tips"></ul></details>
+      </div>
+
+      <div class="section" id="hotelWrap" style="display:none;">
+        <details><summary>Hotel / stay details</summary><div id="hotelDetails"></div></details>
+      </div>
+
+      <div class="section">
+        <details><summary>Notes (saved on this device)</summary><textarea class="note" id="noteBox" placeholder="Reservations, ideas, reminders..."></textarea></details>
+      </div>
+
+      <div class="section">
+        <label style="display:flex;gap:10px;align-items:center;color:var(--muted);font-size:12.5px;">
+          <input type="checkbox" id="doneBox"/> Mark this day complete
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewTimeline" style="display:none;margin-top:12px;">
+    <div class="card pad" style="margin-bottom:12px;"><input id="q" type="search" placeholder="Search timeline: Dubai, Heathrow, Baglioni, flight..." autocomplete="off"/></div>
+    <div class="grid" id="timelineGrid"></div>
+  </div>
+
+  <div id="viewRules" style="display:none;margin-top:12px;">
+
+<div class="card pad" style="margin-bottom:12px;">
+  <div class="smallCardTitle">Emergency Numbers</div>
+  <div class="smallMeta"><b>UAE</b> — Police 999 • Ambulance 998 • Tourist Police 901</div>
+  <div class="smallMeta" style="margin-top:6px;"><b>Maldives</b> — Emergency/Ambulance 102 • Police 119</div>
+  <div class="smallMeta" style="margin-top:6px;">For hotel issues: contact concierge first, then front desk.</div>
+</div>
+
+    <div class="grid" id="rulesGrid"></div>
+  </div>
+</main>
+
+<div class="bottomNav">
+  <div class="bottomRow">
+    <button class="navBtn" id="bPrev">← Prev</button>
+    <button class="navBtn primary" id="bPick">Pick Day</button>
+    <button class="navBtn" id="bNext">Next →</button>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modalCard">
+    <div class="modalHead">
+      <div style="font-weight:1000;">Jump to a day</div>
+      <button class="btn" id="closeModal">Close</button>
+    </div>
+    <div class="modalBody" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TRIP = {
+  "tripName": "Dubai and Back Again",
+  "tagline": "Offline Trip Companion • Day-by-day + Timeline • Works offline",
+  "generated": "2026-01-06T04:33:41Z",
+  "days": [
+    {
+      "day": 1,
+      "date": "Mon, Jan 26, 2026",
+      "title": "Launch Day — Texas hop + long-haul begins",
+      "where": "DFW → AUS → (in transit)",
+      "agenda": [
+        {
+          "time": "3:01 PM",
+          "title": "Depart DFW → AUS",
+          "details": "Gate TBD • Short leg • Keep essentials in carry-on."
+        },
+        {
+          "time": "4:09 PM",
+          "title": "Arrive Austin (AUS)",
+          "details": "Stretch • food • hydrate."
+        },
+        {
+          "time": "7:00 PM",
+          "title": "Depart AUS → London Heathrow (LHR)",
+          "details": "Pick a sleep block and protect it."
+        }
+      ],
+      "tips": [
+        "Hydrate early. Jet lag is a tax — pay it before it compounds.",
+        "Screenshot boarding passes + reservations into Photos as a hard backup.",
+        "Compression socks + aisle walks = less misery.",
+        "Passport + one card + phone + meds live on your body, not in your bag.",
+        "If you feel hungry, you’re already behind: eat something simple before it becomes a mood problem.",
+        "Set a single 'must-do' alarm: boarding time minus 35 minutes."
+      ],
+      "details": [
+        "Game plan: get airborne, protect sleep, and keep your carry-on 'survival kit' tight (chargers/meds/one change of clothes).",
+        "DFW→AUS is quick; AUS→LHR is where you commit to a sleep block. Pick a 4–6 hour window and defend it.",
+        "Hydration > caffeine. If you need caffeine, do it early in the flight so it doesn’t wreck your landing sleep."
+      ],
+      "focus": "Launch & Logistics",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Travel",
+      "movingDay": true
+    },
+    {
+      "day": 2,
+      "date": "Tue, Jan 27, 2026",
+      "title": "In-transit day — protect sleep, protect mood",
+      "where": "Over the Atlantic",
+      "agenda": [
+        {
+          "time": "All day",
+          "title": "Long-haul flight day",
+          "details": "Eat light • water • move hourly."
+        },
+        {
+          "time": "Pro move",
+          "title": "Sleep block",
+          "details": "Pick 4–6 hours and guard it like it’s sacred."
+        }
+      ],
+      "tips": [
+        "Don’t try to be productive. Be recoverable.",
+        "Alcohol + altitude = dehydration compound interest. Keep it light.",
+        "Passport + one card + phone + meds live on your body, not in your bag.",
+        "If you feel hungry, you’re already behind: eat something simple before it becomes a mood problem.",
+        "Set a single 'must-do' alarm: boarding time minus 35 minutes."
+      ],
+      "details": [
+        "This is the 'floating day.' Don’t try to win at productivity—win at arriving functional.",
+        "If you can, shift your schedule: dim screens, eat lighter, and sleep when the cabin is quietest.",
+        "Stretch every 60–90 minutes. Long-haul stiffness + dehydration is how you show up feeling 20 years older."
+      ],
+      "focus": "Recovery in Motion",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Travel",
+      "movingDay": true
+    },
+    {
+      "day": 3,
+      "date": "Wed, Jan 28, 2026",
+      "title": "London layover + Dubai arrival (late)",
+      "where": "LHR → DXB",
+      "agenda": [
+        {
+          "time": "10:10 AM",
+          "title": "Arrive LHR",
+          "details": "Heathrow is big/slow. Don’t wander far unless you’ve got tons of buffer."
+        },
+        {
+          "time": "12:35 PM",
+          "title": "Depart LHR → DXB",
+          "details": "Get to the gate early, then eat/lounge nearby."
+        },
+        {
+          "time": "11:45 PM",
+          "title": "Arrive Dubai (DXB)",
+          "details": "Late arrival. Keep it simple: interim hotel + sleep."
+        }
+      ],
+      "tips": [
+        "Unless you’ve got ~6+ hours, don’t leave the terminal.",
+        "Don’t joke about security. Ever.",
+        "Passport + one card + phone + meds live on your body, not in your bag.",
+        "If you feel hungry, you’re already behind: eat something simple before it becomes a mood problem.",
+        "Set a single 'must-do' alarm: boarding time minus 35 minutes."
+      ],
+      "details": [
+        "Heathrow layover: unless you have a huge buffer, stay airside. LHR lines can be unpredictable.",
+        "Make the gate your anchor point first, then roam for food/lounge. Don’t do it the other way around.",
+        "Dubai arrival is late. Tonight is not for sightseeing—interim hotel, shower, sleep."
+      ],
+      "focus": "Transit + Late Arrival",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Travel",
+      "movingDay": true
+    },
+    {
+      "day": 4,
+      "date": "Thu, Jan 29, 2026",
+      "title": "Arrival in Dubai → Atlantis The Royal",
+      "where": "DXB → Interim hotel → Atlantis (Palm)",
+      "agenda": [
+        {
+          "time": "~1:00 AM",
+          "title": "Interim hotel check-in (near DXB)",
+          "details": "Crash pad so you’re not hauling luggage half-dead."
+        },
+        {
+          "time": "Morning",
+          "title": "Atlantis car pickup",
+          "details": "Driver arranged • keep passports + reservation accessible."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Check in: Atlantis (Palm) — night 1/3",
+          "details": "Your basecamp. Don’t overschedule today."
+        }
+      ],
+      "tips": [
+        "Transport: Careem/Uber/taxis are easiest.",
+        "UAE basics: minimal PDA, no public intoxication, respectful photos.",
+        "Dress code isn’t strict at the resort, but malls/markets/traditional areas: cover shoulders/knees to stay frictionless.",
+        "Careem (Uber equivalent) is the smoothest way to move—save hotel as a pinned location.",
+        "Photos: avoid close-up shots of strangers; ask staff before filming in lounges/venues."
+      ],
+      "hotel": {
+        "name": "Atlantis The Royal",
+        "area": "Palm Jumeirah · Dubai",
+        "checkIn": "15:00",
+        "checkOut": "12:00",
+        "nights": 3,
+        "roomType": "Sky Terrace Family Suite",
+        "transfer": "Hotel-arranged pickup",
+        "notes": [
+          "Primary destination stay begins today."
+        ]
+      },
+      "details": [
+        "Dubai reset day: the win is 'settled.' Check-in, learn the property layout, and lock in any reservations you care about.",
+        "Use your package benefits immediately: breakfast at Gastronomy, Royal Club Lounge (tea + aperitif), and Aquaventure/Lost Chambers access.",
+        "Transportation: Careem/Uber/taxi is easiest. Give yourselves generous buffer time—Dubai distances are deceptive."
+      ],
+      "focus": "Settle In & Orient",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Travel",
+      "movingDay": true,
+      "interimStay": {
+        "name": "Element Al Jaddaf, Dubai",
+        "nights": 1,
+        "transfer": "Uber from DXB airport",
+        "purpose": "Early arrival recovery stop",
+        "notes": [
+          "Arrive DXB late night / early morning.",
+          "Shower, nap, reset after long-haul flight.",
+          "Atlantis pickup arranged from Element later in the day."
+        ]
+      }
+    },
+    {
+      "day": 5,
+      "date": "Fri, Jan 30, 2026",
+      "title": "Dubai Day — water + views + one 'nice' dinner",
+      "where": "Dubai (Palm Jumeirah)",
+      "agenda": [
+        {
+          "time": "Morning",
+          "title": "Aquaventure / water time",
+          "details": "Go early to beat crowds."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Chill + recover",
+          "details": "Pool/beach/naps. This trip is a marathon."
+        },
+        {
+          "time": "Evening",
+          "title": "Signature dinner",
+          "details": "Choose one high-impact dinner; keep the rest free."
+        }
+      ],
+      "tips": [
+        "Sun + travel = dehydration. Water + electrolytes.",
+        "Resorts are relaxed; malls/markets = modest keeps everything smooth.",
+        "Dress code isn’t strict at the resort, but malls/markets/traditional areas: cover shoulders/knees to stay frictionless.",
+        "Careem (Uber equivalent) is the smoothest way to move—save hotel as a pinned location.",
+        "Photos: avoid close-up shots of strangers; ask staff before filming in lounges/venues."
+      ],
+      "details": [
+        "Pick one big feature today (Aquaventure OR a signature dinner OR pure pool day). Stacking everything kills the vibe.",
+        "Spend your credits with intent: the $50 F&B credit and $100 marine experiences credit are 'use it or lose it.'",
+        "Heat management: sunscreen + shade breaks + water. The sun doesn’t negotiate."
+      ],
+      "focus": "Luxury & Play",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "UAE",
+      "movingDay": false
+    },
+    {
+      "day": 6,
+      "date": "Sat, Jan 31, 2026",
+      "title": "Dubai Day — aquarium + free play",
+      "where": "Dubai",
+      "agenda": [
+        {
+          "time": "Late morning",
+          "title": "Lost Chambers Aquarium",
+          "details": "Low effort, high payoff."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Free play",
+          "details": "Souks, mall, or just beach time."
+        },
+        {
+          "time": "Evening",
+          "title": "Sunset drinks",
+          "details": "Pick a view. Keep it simple."
+        }
+      ],
+      "tips": [
+        "Dubai distances are sneaky — plan transport time.",
+        "Be respectful with photography. No close-ups of strangers.",
+        "Dress code isn’t strict at the resort, but malls/markets/traditional areas: cover shoulders/knees to stay frictionless.",
+        "Careem (Uber equivalent) is the smoothest way to move—save hotel as a pinned location.",
+        "Photos: avoid close-up shots of strangers; ask staff before filming in lounges/venues."
+      ],
+      "details": [
+        "Float day: late breakfast → pool → afternoon nap → sunset drinks → dinner.",
+        "If you want a 'Dubai moment' off-property, keep it low-effort: a mall stroll or a quick viewpoint, then back.",
+        "Tonight: confirm transfer timing for your next move and pack lightly so checkout is painless."
+      ],
+      "focus": "Float Day (Do Less)",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "UAE",
+      "movingDay": false
+    },
+    {
+      "day": 7,
+      "date": "Sun, Feb 1, 2026",
+      "title": "Transfer to Abu Dhabi — desert luxury mode",
+      "where": "Dubai → Abu Dhabi (Al Wathba)",
+      "agenda": [
+        {
+          "time": "Midday",
+          "title": "Check out Atlantis",
+          "details": "Hydrate + snacks on deck."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Arrive: Al Wathba Desert Resort & Spa — night 1/2",
+          "details": "1BR Villa • King • Desert view • Plunge pool • Terrace."
+        },
+        {
+          "time": "Evening",
+          "title": "Golden hour",
+          "details": "Terrace + plunge pool + quiet."
+        }
+      ],
+      "tips": [
+        "Abu Dhabi is more conservative than Dubai. Modest in public = easy life.",
+        "Desert nights can cool down — bring layers.",
+        "Abu Dhabi skews more conservative than Dubai—same rules, less tolerance for sloppy behavior.",
+        "Desert air dries you out fast: water + electrolytes + lip balm.",
+        "Golden hour is the whole point—plan one sunset moment with zero agenda."
+      ],
+      "hotel": {
+        "name": "Al Wathba Desert Resort & Spa",
+        "stay": "Feb 1 – Feb 3 (2 nights)",
+        "room": "One-bedroom villa • 1 King • Desert view • Plunge pool • Terrace",
+        "highlights": [
+          "Sunrise/sunset desert moments (photography-friendly)",
+          "Spa time + plunge pool reset",
+          "Ask concierge what’s seasonal right now (best stuff changes)",
+          "Evening turndown service",
+          "Smoke-free property (built 2019)",
+          "Complimentary EV charging + on-site parking",
+          "Fitness center + full business center"
+        ],
+        "localRules": [
+          "Same UAE basics: minimal PDA, no public intoxication/disorderly behavior.",
+          "Avoid photographing people without consent; modest dress in public areas."
+        ],
+        "amenities": {
+          "turndown": [
+            "Evening turndown service"
+          ],
+          "entertainment": [
+            "Premium movie channels",
+            "International cable/satellite",
+            "Radio"
+          ],
+          "accessibleRoomFeatures": [
+            "This room type does not offer mobility accessible rooms with tubs",
+            "This room type does not offer accessible rooms with roll-in showers",
+            "This room type does not offer hearing accessible rooms"
+          ],
+          "hotelHighlights": [
+            "Smoke-free policy",
+            "Built in 2019"
+          ],
+          "parkingTransportation": [
+            "Complimentary EV charging",
+            "Complimentary on-site parking"
+          ],
+          "servicesAmenities": [
+            "Fitness center on-site",
+            "Daily housekeeping",
+            "Full business center on-site"
+          ]
+        },
+        "emergency": {
+          "phone": "+971 2 204 4444",
+          "note": "Luxury Collection concierge is primary escalation."
+        }
+      },
+      "details": [
+        "Transition day to Abu Dhabi: treat it like a reset. Snacks + water, and don’t schedule anything tight right after arrival.",
+        "At Al Wathba, your plunge pool + terrace is the feature. Build in one sunset and one slow morning.",
+        "Ask concierge what’s best *this week* (seasonal activities change fast)."
+      ],
+      "focus": "Transition to Desert",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "UAE",
+      "movingDay": true
+    },
+    {
+      "day": 8,
+      "date": "Mon, Feb 2, 2026",
+      "title": "Abu Dhabi — spa + desert moments",
+      "where": "Al Wathba Desert Resort & Spa",
+      "agenda": [
+        {
+          "time": "Morning",
+          "title": "Desert sunrise / calm coffee",
+          "details": "The quiet hour is the point."
+        },
+        {
+          "time": "Midday",
+          "title": "Spa time",
+          "details": "Book earlier slots if possible."
+        },
+        {
+          "time": "Evening",
+          "title": "Sunset dunes",
+          "details": "Ask concierge what’s seasonal right now."
+        }
+      ],
+      "tips": [
+        "This is a reset day. Don’t turn it into an activity checklist.",
+        "Confirm what’s included in your package (excursions often have tiers).",
+        "Abu Dhabi skews more conservative than Dubai—same rules, less tolerance for sloppy behavior.",
+        "Desert air dries you out fast: water + electrolytes + lip balm.",
+        "Golden hour is the whole point—plan one sunset moment with zero agenda."
+      ],
+      "details": [
+        "This is luxury mode: do less. Spa, a desert sunrise, and one golden-hour moment beats a checklist day.",
+        "Desert evenings cool down—grab a layer so you’re not shivering at the prettiest hour.",
+        "Confirm departure logistics for tomorrow: airport timing, transfers, and document readiness."
+      ],
+      "focus": "Deep Reset",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Travel",
+      "movingDay": false
+    },
+    {
+      "day": 9,
+      "date": "Tue, Feb 3, 2026",
+      "title": "Malé Buffer Night (Outbound) — Airport Transit",
+      "where": "AUH → MLE · Velana Airport",
+      "agenda": [
+        {
+          "time": "8:40 AM",
+          "title": "Depart AUH → MLE",
+          "details": "Flight ref: 368-A8Q4GB"
+        },
+        {
+          "time": "1:50 PM",
+          "title": "Arrive Malé",
+          "details": "Too late for seaplane cutoff → overnight hotel + dinner."
+        },
+        {
+          "time": "Evening",
+          "title": "Dinner + sleep",
+          "details": "Keep it simple. You’re one step from paradise."
+        }
+      ],
+      "tips": [
+        "Outside resorts, Maldives is conservative. Dress modestly in Malé.",
+        "Alcohol is generally restricted outside resort islands.",
+        "Seaplanes are weight-sensitive: keep a small 'critical' bag separate in case luggage is limited.",
+        "On local islands/Malé: modest clothing; on resort island: relaxed.",
+        "Reef respect: reef-safe sunscreen, no stepping on coral, no touching wildlife."
+      ],
+      "details": [
+        "Malé buffer night: keep it simple. Dinner, early sleep, and make tomorrow frictionless.",
+        "Confirm seaplane meeting point/time with the resort. They run on their own schedule.",
+        "Have small cash + a card accessible; keep passports in the same pocket the whole day."
+      ],
+      "focus": "Buffer & Prep",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "UAE",
+      "movingDay": true,
+      "hotel": {
+        "name": "JEN Maldives Malé by Shangri‑La",
+        "area": "Malé · Maldives",
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "nights": 1,
+        "roomType": "Deluxe Room · 1 King Bed",
+        "transfer": "Complimentary airport shuttle",
+        "notes": [
+          "Convenient overnight near Velana Airport."
+        ]
+      },
+      "subtitle": "Short overnight to keep transfers clean and stress low.",
+      "notes": [
+        "Transit anchor: this is not a destination day—it's a buffer to make tomorrow smooth.",
+        "Confirm shuttle pickup time with hotel on arrival.",
+        "Goal: dinner, early sleep, charge devices, stage bags for next move."
+      ],
+      "todayFocus": "Recover + reset. Make tomorrow effortless."
+    },
+    {
+      "day": 10,
+      "date": "Wed, Feb 4, 2026",
+      "title": "Seaplane day — Baglioni Water Villa",
+      "where": "Malé → Baglioni Resort Maldives",
+      "agenda": [
+        {
+          "time": "Morning",
+          "title": "Seaplane transfer",
+          "details": "Confirm exact time with resort. Baggage limits may apply."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Check in: Baglioni Water Villa — night 1/4",
+          "details": "Overwater bungalow • direct lagoon access."
+        },
+        {
+          "time": "Evening",
+          "title": "Sunset + first all-inclusive win",
+          "details": "Ask what’s included so nothing gets left on the table."
+        }
+      ],
+      "tips": [
+        "Reef-safe sunscreen only.",
+        "Book spa/experiences early — prime slots disappear fast.",
+        "Seaplanes are weight-sensitive: keep a small 'critical' bag separate in case luggage is limited.",
+        "On local islands/Malé: modest clothing; on resort island: relaxed.",
+        "Reef respect: reef-safe sunscreen, no stepping on coral, no touching wildlife."
+      ],
+      "hotel": {
+        "name": "Baglioni Resort Maldives",
+        "stay": "Feb 4 – Feb 8 (4 nights)",
+        "room": "Water Villa (overwater bungalow) • all-inclusive luxury package",
+        "highlights": [
+          "Lagoon access off your villa",
+          "House-reef snorkeling (ask best entry points)",
+          "Pick one evening: no plans except the view",
+          "Early morning light over water is unreal"
+        ],
+        "allInclusive": [
+          "At check-in: confirm what’s included vs. extra (excursions often have tiers).",
+          "Use what you paid for: tastings, breakfast spreads, non-motorized water sports (if included).",
+          "Reserve specialty dinners/spa early — good slots vanish fast."
+        ],
+        "localRules": [
+          "Resorts relaxed; Malé/local islands conservative.",
+          "Alcohol generally restricted outside resorts.",
+          "Respect the reef (reef-safe sunscreen; don’t stand on coral)."
+        ],
+        "package": {
+          "packageName": "Luxury All‑Inclusive",
+          "villa": [
+            "Overwater or beach villa with direct lagoon or beach access",
+            "Private terrace with loungers and outdoor seating",
+            "In‑villa minibar stocked with soda, wine, beer, snacks, and more (refreshed regularly)"
+          ],
+          "dining": [
+            "Breakfast, lunch, and dinner included at resort restaurants",
+            "Refined international dining across 5 restaurants (Italian, Asian, international)",
+            "Unlimited drinks including fine wines, spirits, cocktails, beer, soft drinks",
+            "Pool Bar included for drinks and light dining"
+          ],
+          "activities": [
+            "Snorkel gear provided (mask, fins, breathing tube)",
+            "Non‑motorized water sports (kayaks, paddleboards – subject to availability)",
+            "Tennis courts access",
+            "24‑hour fitness center access",
+            "Outdoor yoga & fitness pavilion sessions"
+          ],
+          "family": [
+            "Baglioni Kids’ Club programs",
+            "Nature Academy activities for kids and teens"
+          ],
+          "services": [
+            "Wi‑Fi throughout the resort",
+            "Housekeeping service daily",
+            "Concierge assistance for excursions and dining"
+          ],
+          "notes": [
+            "Some specialty dining, excursions, or spa treatments may incur additional charges",
+            "Exact inclusions may vary by booking — confirm details at check‑in"
+          ]
+        },
+        "emergency": {
+          "note": "Use resort concierge desk or WhatsApp contact provided at check-in."
+        }
+      },
+      "details": [
+        "Seaplane day: plan for waiting. Keep essentials in a small bag: water, sunscreen, sunglasses, chargers.",
+        "On arrival: immediately confirm what your all-inclusive covers (dining, minibar, activities) so perks don’t hide from you.",
+        "Tonight: do one thing—sunset + dinner. That’s enough."
+      ],
+      "focus": "Arrival to Paradise",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Maldives",
+      "movingDay": true
+    },
+    {
+      "day": 11,
+      "date": "Thu, Feb 5, 2026",
+      "title": "Maldives — lagoon life",
+      "where": "Baglioni Resort Maldives",
+      "agenda": [
+        {
+          "time": "Morning",
+          "title": "Snorkel / house reef",
+          "details": "Early water is calmer; light is better."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Nap + pool + villa time",
+          "details": "You’re allowed to do nothing."
+        },
+        {
+          "time": "Evening",
+          "title": "Dinner",
+          "details": "Ask if reservations are needed for any venues."
+        }
+      ],
+      "tips": [
+        "Use the all-inclusive perks on purpose. Don’t ‘discover’ them on day 4.",
+        "Keep one evening completely unstructured.",
+        "Seaplanes are weight-sensitive: keep a small 'critical' bag separate in case luggage is limited.",
+        "On local islands/Malé: modest clothing; on resort island: relaxed.",
+        "Reef respect: reef-safe sunscreen, no stepping on coral, no touching wildlife."
+      ],
+      "details": [
+        "Maldives rhythm: early snorkel when water is calm → nap → pool/villa time → dinner.",
+        "If you want photos, morning light is best; sunset is second best; midday is harsh and sweaty.",
+        "Book anything that needs reservations now (specialty dinners/spa/excursions)."
+      ],
+      "focus": "Lagoon Rhythm",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Maldives",
+      "movingDay": false
+    },
+    {
+      "day": 12,
+      "date": "Fri, Feb 6, 2026",
+      "title": "Maldives — optional excursions",
+      "where": "Baglioni Resort Maldives",
+      "agenda": [
+        {
+          "time": "Morning",
+          "title": "Optional: boat/snorkel excursion",
+          "details": "Confirm what’s included vs. extra."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Spa / villa reset",
+          "details": "Luxury is using the luxury."
+        },
+        {
+          "time": "Evening",
+          "title": "Golden hour photos",
+          "details": "Sunset is basically cheating here."
+        }
+      ],
+      "tips": [
+        "Don’t stack three excursions in one day. It kills the vibe.",
+        "If you do motorized sports, confirm fees + timing first.",
+        "Seaplanes are weight-sensitive: keep a small 'critical' bag separate in case luggage is limited.",
+        "On local islands/Malé: modest clothing; on resort island: relaxed.",
+        "Reef respect: reef-safe sunscreen, no stepping on coral, no touching wildlife."
+      ],
+      "details": [
+        "Optional excursion day: pick one. Don’t book three 'once-in-a-lifetime' things in the same day.",
+        "Use non-motorized water sports if included—low effort, high happiness.",
+        "Midday: shade + hydration + a real meal so your energy doesn’t crater."
+      ],
+      "focus": "Optional Adventure",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Maldives",
+      "movingDay": false
+    },
+    {
+      "day": 13,
+      "date": "Sat, Feb 7, 2026",
+      "title": "Maldives — final full day",
+      "where": "Baglioni Resort Maldives",
+      "agenda": [
+        {
+          "time": "Morning",
+          "title": "Slow morning",
+          "details": "Coffee + lagoon + no rush."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Prep lightly",
+          "details": "Keep travel clothes ready for transfer timing."
+        },
+        {
+          "time": "Evening",
+          "title": "Final dinner",
+          "details": "One last ‘use what you paid for’ moment."
+        }
+      ],
+      "tips": [
+        "Confirm Feb 8 transfer time before bed.",
+        "Charge everything tonight. Future-you will thank you.",
+        "Seaplanes are weight-sensitive: keep a small 'critical' bag separate in case luggage is limited.",
+        "On local islands/Malé: modest clothing; on resort island: relaxed.",
+        "Reef respect: reef-safe sunscreen, no stepping on coral, no touching wildlife."
+      ],
+      "details": [
+        "Final full day: protect it. Keep the schedule light so you can actually feel the place.",
+        "Confirm tomorrow’s transfer time before dinner. Charge everything tonight.",
+        "Pack the boring stuff now (electronics/chargers/documents), so morning is smooth."
+      ],
+      "focus": "Final Full Day",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Maldives",
+      "movingDay": false
+    },
+    {
+      "day": 14,
+      "date": "Sun, Feb 8, 2026",
+      "title": "Malé Buffer Night (Return) — Airport Transit",
+      "where": "Resort → Malé · Velana Airport",
+      "agenda": [
+        {
+          "time": "Morning",
+          "title": "Seaplane back to Malé",
+          "details": "Confirm timing; they run on their schedule."
+        },
+        {
+          "time": "Evening",
+          "title": "Overnight in Malé (placeholder)",
+          "details": "Dinner + sleep. Keep it simple."
+        }
+      ],
+      "tips": [
+        "Keep passports and travel docs in the same pocket. No scavenger hunts.",
+        "Seaplanes are weight-sensitive: keep a small 'critical' bag separate in case luggage is limited.",
+        "On local islands/Malé: modest clothing; on resort island: relaxed.",
+        "Reef respect: reef-safe sunscreen, no stepping on coral, no touching wildlife."
+      ],
+      "details": [
+        "Back to Malé: treat it like a decompression step, not an extra adventure.",
+        "Keep documents and boarding info in one place; tomorrow is an airport day.",
+        "Eat early and sleep—your body will cash the check tomorrow."
+      ],
+      "focus": "Decompression",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Maldives",
+      "movingDay": true,
+      "hotel": {
+        "name": "JEN Maldives Malé by Shangri‑La",
+        "area": "Malé · Maldives",
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "nights": 1,
+        "roomType": "Deluxe Room · 1 King Bed",
+        "transfer": "Complimentary airport shuttle",
+        "notes": [
+          "Return overnight before international departure."
+        ]
+      },
+      "subtitle": "Short overnight to keep transfers clean and stress low.",
+      "notes": [
+        "Transit anchor: this is not a destination day—it's a buffer to make tomorrow smooth.",
+        "Confirm shuttle pickup time with hotel on arrival.",
+        "Goal: dinner, early sleep, charge devices, stage bags for next move."
+      ],
+      "todayFocus": "Recover + reset. Make tomorrow effortless."
+    },
+    {
+      "day": 15,
+      "date": "Mon, Feb 9, 2026",
+      "title": "Fly back to Abu Dhabi — overnight reset",
+      "where": "MLE → AUH",
+      "agenda": [
+        {
+          "time": "9:10 AM",
+          "title": "Depart MLE → AUH",
+          "details": "Arrive 12:35 PM."
+        },
+        {
+          "time": "Afternoon",
+          "title": "Abu Dhabi overnight (placeholder)",
+          "details": "Recovery night before the long return chain."
+        }
+      ],
+      "tips": [
+        "Tonight is recovery. Don’t schedule heroics.",
+        "Abu Dhabi skews more conservative than Dubai—same rules, less tolerance for sloppy behavior.",
+        "Desert air dries you out fast: water + electrolytes + lip balm.",
+        "Golden hour is the whole point—plan one sunset moment with zero agenda."
+      ],
+      "details": [
+        "Abu Dhabi overnight: recovery night. Light dinner, early sleep, and a clean pack for the return chain.",
+        "Do a 'charging station' ritual: phones, power banks, earbuds, watches—everything topped off.",
+        "If you’re missing anything (meds, toiletries), tonight is the easy fix window."
+      ],
+      "focus": "Reset Night",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "UAE",
+      "movingDay": true,
+      "hotel": {
+        "name": "W Abu Dhabi – Yas Island",
+        "area": "Yas Island · Abu Dhabi",
+        "checkIn": "15:00",
+        "checkOut": "12:00",
+        "nights": 1,
+        "roomType": "WOW Suite · 1 Bedroom · King Bed",
+        "transfer": "Taxi/Uber from AUH airport",
+        "notes": [
+          "High‑energy stay overlooking Yas Marina Circuit."
+        ]
+      }
+    },
+    {
+      "day": 16,
+      "date": "Tue, Feb 10, 2026",
+      "title": "Return chain begins — AUH → DOH",
+      "where": "Abu Dhabi → Doha",
+      "agenda": [
+        {
+          "time": "10:30 PM",
+          "title": "Depart AUH → DOH",
+          "details": "Arrive 12:40 AM (Feb 11)."
+        },
+        {
+          "time": "Late night",
+          "title": "Airport mode",
+          "details": "Snacks + water. Protect sleep wherever you can."
+        }
+      ],
+      "tips": [
+        "Airport food at 1 AM is a gamble. Keep snacks.",
+        "Protect your sleep. Everything else is secondary.",
+        "Passport + one card + phone + meds live on your body, not in your bag.",
+        "If you feel hungry, you’re already behind: eat something simple before it becomes a mood problem.",
+        "Set a single 'must-do' alarm: boarding time minus 35 minutes."
+      ],
+      "details": [
+        "Return chain begins: your job is to be early and boring. Airports punish drama.",
+        "Eat something before the late flight. 1am hunger turns into 1am bad decisions.",
+        "Hydrate. The next 18 hours is a dehydration contest."
+      ],
+      "focus": "Return Chain",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "UAE",
+      "movingDay": true
+    },
+    {
+      "day": 17,
+      "date": "Wed, Feb 11, 2026",
+      "title": "DOH → LHR → DFW (Home)",
+      "where": "Doha → London → Dallas",
+      "agenda": [
+        {
+          "time": "1:50 AM",
+          "title": "Depart DOH → LHR",
+          "details": "Arrive 6:15 AM."
+        },
+        {
+          "time": "8:20 AM",
+          "title": "Depart LHR → DFW",
+          "details": "Arrive 12:50 PM (local)."
+        },
+        {
+          "time": "After",
+          "title": "Home",
+          "details": "Don’t schedule anything important that evening."
+        }
+      ],
+      "tips": [
+        "Post-trip fatigue hits after you land. Give yourselves a soft landing day.",
+        "Passport + one card + phone + meds live on your body, not in your bag.",
+        "If you feel hungry, you’re already behind: eat something simple before it becomes a mood problem.",
+        "Set a single 'must-do' alarm: boarding time minus 35 minutes."
+      ],
+      "details": [
+        "Conveyor belt day: DOH → LHR → DFW. Don’t schedule anything on arrival day—future you will hate you.",
+        "Keep one pen handy for forms, and keep your passport out of deep storage.",
+        "When you land, get food + shower + sleep. Don’t try to be heroic."
+      ],
+      "focus": "Get Home Safely",
+      "playbook": {
+        "Missed connection / delay": [
+          "Go to the airline desk (or app chat) immediately and get rebooked first; ask for the *next 2 options* and choose.",
+          "If overnight is required: request hotel + meal vouchers (politely, immediately).",
+          "Text your spouse a single source-of-truth plan: new flight + gate + boarding time."
+        ],
+        "Lost passport / documents": [
+          "Freeze: retrace last known location (seat pocket / lounge / security bins).",
+          "If truly lost: file a local police report + contact your embassy/consulate for emergency travel docs.",
+          "Have digital backups ready: passport photo page + travel confirmations."
+        ],
+        "Sick / injury": [
+          "Call hotel concierge: they’ll route you to the right clinic, doctor-on-call, or emergency services.",
+          "Hydration + electrolytes first; then medical help. Don’t tough-guy a heat/dehydration issue.",
+          "If severe symptoms: use emergency number (UAE 998 ambulance; Maldives 102)."
+        ],
+        "Payment / card problems": [
+          "Move to backup card + Apple/Google Pay; don’t argue with a terminal.",
+          "Call bank using the number on the card; tell them you’re abroad and request a travel note.",
+          "Keep some local cash for taxis/tips as a fallback."
+        ],
+        "Phone lost / dead": [
+          "Switch to spouse phone as primary; log into email for reservations.",
+          "Use hotel concierge to call taxi/airline if needed.",
+          "If stolen: lock device via Find My / Google Find; change critical passwords."
+        ]
+      },
+      "transferChecks": [
+        "Passport + primary card + phone + meds on body (not in checked bags).",
+        "Screenshots saved: hotel confirmations + flight tickets + transfer details.",
+        "Confirm pickup time + meeting point the night before (especially seaplane).",
+        "Baggage reality check: seaplane weight limits are strict; keep a small essentials bag separate.",
+        "Charge everything: phone + power bank + earbuds."
+      ],
+      "endOfDay": [
+        "Confirm tomorrow’s first hard commitment (pickup / flight / reservation) + add a 30–45 min buffer.",
+        "Charge devices + lay out travel clothes if moving tomorrow.",
+        "Refill water bottles; pack snacks if you have an early departure.",
+        "Quick review: credits/perks you haven’t used yet (lounge, breakfast, resort access)."
+      ],
+      "region": "Travel",
+      "movingDay": true
+    }
+  ],
+  "emergency": {
+    "UAE": {
+      "police": "999",
+      "ambulance": "998",
+      "tourist_police": "901"
+    },
+    "Maldives": {
+      "emergency": "102",
+      "police": "119",
+      "ambulance": "102"
+    }
+  }
+};
+const TIMELINE = [{"type": "flight", "when": "Jan 26 3:01 PM", "title": "DFW → AUS"}, {"type": "flight", "when": "Jan 26 7:00 PM", "title": "AUS → LHR"}, {"type": "flight", "when": "Jan 28 12:35 PM", "title": "LHR → DXB (arr 11:45 PM)"}, {"type": "hotel", "when": "Jan 29", "title": "Interim hotel near DXB (sleep/reset)"}, {"type": "hotel", "when": "Jan 29 – Feb 1", "title": "Atlantis (Palm), Dubai (3 nights)"}, {"type": "hotel", "when": "Feb 1 – Feb 3", "title": "Al Wathba Desert Resort & Spa (2 nights)"}, {"type": "flight", "when": "Feb 3 8:40 AM", "title": "AUH → MLE (arr 1:50 PM)"}, {"type": "hotel", "when": "Feb 3", "title": "Malé overnight (placeholder)"}, {"type": "hotel", "when": "Feb 4 – Feb 8", "title": "Baglioni Resort Maldives (Water Villa • all-inclusive)"}, {"type": "flight", "when": "Feb 9 9:10 AM", "title": "MLE → AUH (arr 12:35 PM)"}, {"type": "flight", "when": "Feb 10 10:30 PM", "title": "AUH → DOH (arr 12:40 AM)"}, {"type": "flight", "when": "Feb 11 1:50 AM", "title": "DOH → LHR (arr 6:15 AM)"}, {"type": "flight", "when": "Feb 11 8:20 AM", "title": "LHR → DFW (arr 12:50 PM)"}];
+const RULES = {"UAE (Dubai + Abu Dhabi) — do/don’t": ["Carry a photo of your passport + entry stamp/visa page as backup (don’t replace the real thing).", "Dress: resort/restaurant varies; malls/markets/traditional areas—cover shoulders/knees to avoid hassle.", "PDA: keep it minimal in public. Inside the resort you’ve got more slack.", "Alcohol: drink only in licensed venues; avoid being visibly drunk in public. Don’t carry open alcohol outside venues.", "Photography: avoid close-ups of strangers; ask before filming staff/security or inside lounges.", "Behavior: no yelling/arguments in public. If something goes wrong, de-escalate and move.", "Transit: Careem/Uber/taxis are easiest; Dubai distances are deceptive—pad travel time."], "Maldives — do/don’t": ["Malé/local islands are conservative: modest dress, especially away from the resort.", "Alcohol is generally restricted outside resort islands—don’t assume you can buy it in Malé.", "Seaplanes: strict baggage rules are common; keep essentials in a small day bag.", "Ocean safety: reef-safe sunscreen; don’t touch coral or wildlife; watch currents when snorkeling.", "Resort rhythm: book spa/specialty dinners/excursions early—prime times disappear fast."], "Practical backups": ["Download offline maps for Dubai/Abu Dhabi/Malé.", "Screenshot reservations + confirmations into Photos (plus one email-forward to a shared inbox).", "Go-bag checklist: passports, cards, chargers, meds, sunglasses, electrolytes.", "Keep a tiny ‘airport kit’: pen, gum, wipes, mini deodorant, pain reliever."], "Airports + layovers": ["LHR is big and lines can be unpredictable—find your gate first, then roam.", "DOH is efficient but late-night fatigue is real—snacks + water + sleep wherever possible.", "Connection insurance: set one alarm for boarding time minus 35 minutes and stick to it."]};
+
+const KEY_DONE = "nyx_v5_done_days";
+const KEY_NOTES = "nyx_v5_notes_days";
+const KEY_PACK = "nyx_v13_pack";
+const KEY_CREDITS = "nyx_v13_credits";
+const KEY_VAULT = "nyx_v13_vault";
+let done = JSON.parse(localStorage.getItem(KEY_DONE) || "{}");
+let notes = JSON.parse(localStorage.getItem(KEY_NOTES) || "{}");
+let pack = JSON.parse(localStorage.getItem(KEY_PACK) || "{}");
+let credits = JSON.parse(localStorage.getItem(KEY_CREDITS) || "{}");
+let vault = JSON.parse(localStorage.getItem(KEY_VAULT) || "{}");
+
+let idx = 0;
+const $ = (id) => document.getElementById(id);
+const toast = (msg) => {
+  const t = $("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(window.__t);
+  window.__t = setTimeout(()=> t.style.display="none", 1600);
+};
+
+function esc(s) { return (s ?? "").toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+function listSection(title, items) {
+  if (!items || !items.length) return "";
+  const lis = items.map(x => `<li>${esc(x)}</li>`).join("");
+  return `<div class="section"><div class="smallCardTitle">${esc(title)}</div><ul class="ul">${lis}</ul></div>`;
+}
+
+
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+function setRing(dayIndex, total, doneFlag){
+  const pctTrip = total ? ((dayIndex+1)/total) : 0;
+  const fg = document.querySelector(".ring .fg");
+  if (fg){
+    const pct = clamp(pctTrip*100, 0, 100);
+    fg.setAttribute("stroke-dasharray", `${pct} 100`);
+    fg.style.opacity = doneFlag ? "1" : "0.85";
+  }
+  const ringDay = $("ringDay");
+  const ringOf = $("ringOf");
+  const ringSub = $("ringSub");
+  if (ringDay) ringDay.textContent = `Day ${dayIndex+1}`;
+  if (ringOf) ringOf.textContent = `of ${total}`;
+  if (ringSub) ringSub.textContent = doneFlag ? "Marked complete" : "In progress";
+}
+
+function pickNextAgenda(d){
+  const items = (d.agenda || []).map(x => ({...x}));
+  if (!items.length) return null;
+
+  const now = new Date();
+  const year = now.getFullYear();
+
+  const dateStr = (d.date || "").toString();
+  let baseDate = null;
+  const t1 = Date.parse(dateStr);
+  if (!isNaN(t1)) baseDate = new Date(t1);
+  else {
+    const t2 = Date.parse(`${dateStr} ${year}`);
+    if (!isNaN(t2)) baseDate = new Date(t2);
+  }
+  if (!baseDate) baseDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const parseTime = (t) => {
+    if (!t) return null;
+    const s = t.toString().trim();
+
+    // 15:00
+    let m = s.match(/(^|\b)(\d{1,2}):(\d{2})(\b|$)/);
+    if (m){
+      const hh = parseInt(m[2],10);
+      const mm = parseInt(m[3],10);
+      return {hh, mm};
+    }
+    // 10:30 PM / 10 PM
+    m = s.match(/(^|\b)(\d{1,2})(?::(\d{2}))?\s*(AM|PM)\b/i);
+    if (m){
+      let hh = parseInt(m[2],10);
+      const mm = m[3] ? parseInt(m[3],10) : 0;
+      const ap = m[4].toUpperCase();
+      if (ap==="PM" && hh<12) hh += 12;
+      if (ap==="AM" && hh===12) hh = 0;
+      return {hh, mm};
+    }
+    return null;
+  };
+
+  let best = null;
+  for (const it of items){
+    const tm = parseTime(it.time);
+    if (!tm) continue;
+    const dt = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), tm.hh, tm.mm, 0, 0);
+    const diff = dt.getTime() - now.getTime();
+    if (diff >= 0 && (!best || diff < best.diff)){
+      best = {it, diff, dt};
+    }
+  }
+  return best ? best : {it: items[0], diff: null, dt: null};
+}
+
+
+function renderNextUp(d){
+  const next = pickNextAgenda(d);
+  const c = $("nextCard");
+  if (!c) return;
+  if (!next){
+    c.style.display = "none";
+    return;
+  }
+  c.style.display = "block";
+  $("nextTitle").textContent = next.it.title || "—";
+  $("nextMeta").textContent = next.it.details || "";
+  const nt = $("nextTime");
+  if (nt){
+    nt.textContent = (next.it.time || "—");
+  }
+}
+
+
+function hmsFromTimeStr(s){
+  if (!s) return null;
+  const t = s.toString().trim();
+  let m = t.match(/(^|\b)(\d{1,2}):(\d{2})(\b|$)/);
+  if (m) return {hh: parseInt(m[2],10), mm: parseInt(m[3],10)};
+  m = t.match(/(^|\b)(\d{1,2})(?::(\d{2}))?\s*(AM|PM)\b/i);
+  if (m){
+    let hh = parseInt(m[2],10);
+    const mm = m[3] ? parseInt(m[3],10) : 0;
+    const ap = m[4].toUpperCase();
+    if (ap==="PM" && hh<12) hh += 12;
+    if (ap==="AM" && hh===12) hh = 0;
+    return {hh, mm};
+  }
+  return null;
+}
+
+function toICSDate(dt){
+  const pad = (n)=> String(n).padStart(2,"0");
+  return dt.getUTCFullYear()+pad(dt.getUTCMonth()+1)+pad(dt.getUTCDate())+"T"+pad(dt.getUTCHours())+pad(dt.getUTCMinutes())+pad(dt.getUTCSeconds())+"Z";
+}
+
+function downloadICS(title, desc, dateStr, timeStr){
+  const now = new Date();
+  let base = new Date();
+  const p = Date.parse(dateStr);
+  if (!isNaN(p)) base = new Date(p);
+  const tm = hmsFromTimeStr(timeStr) || {hh:9, mm:0};
+  const start = new Date(base.getFullYear(), base.getMonth(), base.getDate(), tm.hh, tm.mm, 0);
+  const end = new Date(start.getTime() + 60*60*1000);
+  const uid = "nyx-"+Math.random().toString(36).slice(2)+"@offline";
+  const ics =
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Nyx Offline//Trip//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${toICSDate(now)}
+DTSTART:${toICSDate(new Date(start.getTime()-start.getTimezoneOffset()*60000))}
+DTEND:${toICSDate(new Date(end.getTime()-end.getTimezoneOffset()*60000))}
+SUMMARY:${title.replaceAll("\n"," ")}
+DESCRIPTION:${(desc||"").replaceAll("\n"," ").slice(0,900)}
+END:VEVENT
+END:VCALENDAR`;
+  const blob = new Blob([ics], {type:"text/calendar"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (title.replace(/[^a-z0-9]+/gi,"-").toLowerCase().slice(0,40) || "event") + ".ics";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 500);
+}
+
+function renderActions(d){
+  const row = $("actionsRow");
+  if (!row) return;
+  row.innerHTML = "";
+  const mk = (label, cls, fn) => {
+    const b = document.createElement("button");
+    b.className = "actionBtn "+(cls||"");
+    b.textContent = label;
+    b.onclick = fn;
+    row.appendChild(b);
+  };
+
+  // Map
+  mk("🗺️ Map", "", () => {
+    const q = encodeURIComponent(d.where || d.title || "Dubai");
+    window.open("https://www.google.com/maps/search/?api=1&query="+q, "_blank");
+  });
+
+  // Call hotel (if phone)
+  const phone = d.hotel && d.hotel.emergency && d.hotel.emergency.phone;
+  if (phone){
+    mk("📞 Call Hotel", "primary", () => { window.location.href = "tel:"+phone.replaceAll(" ",""); });
+  } else {
+    mk("📞 Call Hotel", "", () => toast("No phone number stored for this day."));
+  }
+
+  // Reminder (ics)
+  mk("⏰ Add Reminder", "", () => {
+    const next = pickNextAgenda(d);
+    const it = next && next.it ? next.it : {title: d.title, details: d.where, time:"09:00"};
+    downloadICS("Trip: "+(it.title||d.title), (it.details||"")+" | "+(d.where||""), d.date || "", it.time || "09:00");
+    toast("Downloaded .ics reminder.");
+  });
+}
+
+function renderPacking(d){
+  const host = $("packingList");
+  if (!host) return;
+
+  const items = [
+    {k:"passport", t:"Passport(s) + backup photo"},
+    {k:"cards", t:"Primary + backup card"},
+    {k:"meds", t:"Meds / pain relief / electrolytes"},
+    {k:"chargers", t:"Chargers + power bank + adapters"},
+    {k:"swim", t:"Swim gear + sunscreen"},
+    {k:"comfort", t:"Comfort kit: wipes / gum / mini deodorant"},
+    {k:"docs", t:"Screenshots: flights + hotels + transfers"},
+    {k:"clothes", t:"One change of clothes in carry-on (moving days)"}
+  ];
+
+  const dayKey = "day"+d.day;
+  pack[dayKey] = pack[dayKey] || {};
+  const state = pack[dayKey];
+
+  host.innerHTML = "";
+  items.forEach(it => {
+    const row = document.createElement("div");
+    row.className = "switchRow";
+    const left = document.createElement("div");
+    left.innerHTML = `<div class="lbl">${esc(it.t)}</div>${d.movingDay && it.k==="clothes" ? `<div class="meta">Moving day: this one matters.</div>` : `<div class="meta">${d.region==="UAE" && it.k==="chargers" ? "UAE uses Type G plugs." : ""}</div>`}`;
+    const right = document.createElement("input");
+    right.type = "checkbox";
+    right.checked = !!state[it.k];
+    right.onchange = () => {
+      state[it.k] = right.checked;
+      pack[dayKey] = state;
+      localStorage.setItem(KEY_PACK, JSON.stringify(pack));
+    };
+    row.appendChild(left);
+    row.appendChild(right);
+    host.appendChild(row);
+  });
+
+  if (d.movingDay){
+    const note = document.createElement("div");
+    note.className = "smallMeta";
+    note.style.marginTop = "10px";
+    note.textContent = "Moving day: pack early, charge everything, and keep passports/meds on-body.";
+    host.appendChild(note);
+  }
+}
+
+function renderCreditTracker(d){
+  // Only for Atlantis days with credits metadata
+  const h = d.hotel;
+  if (!h || !h.credits) return "";
+
+  const key = "atlantis_"+(h.package && h.package.reference ? h.package.reference : "default");
+  credits[key] = credits[key] || {fnb:false, marine:false};
+  localStorage.setItem(KEY_CREDITS, JSON.stringify(credits));
+
+  const venues = (h.credits.creditVenues || []).join(", ");
+  return `
+  <div class="section">
+    <details open>
+      <summary>Credits tracker (use it or lose it)</summary>
+      <div class="smallMeta">Track the credits so they don’t evaporate. Venues: ${esc(venues)}</div>
+      <div class="switchRow">
+        <div>
+          <div class="lbl">F&B Credit — $${esc(h.credits.fnbCreditUSD)}</div>
+          <div class="meta">Redeem at: ${esc(venues)}</div>
+        </div>
+        <input type="checkbox" id="credFnb"/>
+      </div>
+      <div class="switchRow">
+        <div>
+          <div class="lbl">Marine Experiences Credit — $${esc(h.credits.marineExperienceCreditUSD)}</div>
+          <div class="meta">Use for aquarium / marine animal experiences.</div>
+        </div>
+        <input type="checkbox" id="credMarine"/>
+      </div>
+    </details>
+  </div>`;
+}
+
+function bindCreditTracker(d){
+  const h = d.hotel;
+  if (!h || !h.credits) return;
+  const key = "atlantis_"+(h.package && h.package.reference ? h.package.reference : "default");
+  credits[key] = credits[key] || {fnb:false, marine:false};
+
+  const f = $("credFnb");
+  const m = $("credMarine");
+  if (f){
+    f.checked = !!credits[key].fnb;
+    f.onchange = ()=>{ credits[key].fnb = f.checked; localStorage.setItem(KEY_CREDITS, JSON.stringify(credits)); toast(f.checked?"F&B credit marked used.":"F&B credit unmarked."); };
+  }
+  if (m){
+    m.checked = !!credits[key].marine;
+    m.onchange = ()=>{ credits[key].marine = m.checked; localStorage.setItem(KEY_CREDITS, JSON.stringify(credits)); toast(m.checked?"Marine credit marked used.":"Marine credit unmarked."); };
+  }
+}
+
+function renderVaultChecklist(){
+  const host = $("vaultChecklist");
+  if (!host) return;
+
+  const items = [
+    {k:"passportPics", t:"Passport photo pages saved to Photos (both of you)"},
+    {k:"hotelConfs", t:"Hotel confirmations screenshots saved"},
+    {k:"flightConfs", t:"Flight confirmations + e-tickets saved"},
+    {k:"transferInfo", t:"Transfer pickup instructions saved (Atlantis + seaplane)"},
+    {k:"offlineMaps", t:"Offline maps downloaded (Dubai/Abu Dhabi/Malé)"},
+    {k:"banksNotified", t:"Bank/travel notifications done (or know the call numbers)"},
+    {k:"medsBackup", t:"Backup meds + prescriptions photo"},
+    {k:"contacts", t:"Key contacts written down (hotel phone + spouse phone)"},
+  ];
+
+  host.innerHTML = "";
+  items.forEach(it => {
+    const row = document.createElement("div");
+    row.className = "switchRow";
+    const left = document.createElement("div");
+    left.innerHTML = `<div class="lbl">${esc(it.t)}</div><div class="meta">Saved locally on this device.</div>`;
+    const right = document.createElement("input");
+    right.type = "checkbox";
+    right.checked = !!vault[it.k];
+    right.onchange = ()=>{
+      vault[it.k] = right.checked;
+      localStorage.setItem(KEY_VAULT, JSON.stringify(vault));
+    };
+    row.appendChild(left);
+    row.appendChild(right);
+    host.appendChild(row);
+  });
+}
+
+
+
+/* === Safe v2 (fixed): day classification helpers === */
+function detectDayTypeFromDay(d){
+  const agendaTxt = (d.agenda||[]).map(a => (a.title||"")+" "+(a.details||"")).join(" ");
+  const txt = ((d.title||"")+" "+(d.where||"")+" "+(d.subtitle||"")+" "+(d.stay||"")+" "+agendaTxt).toLowerCase();
+  if (/(flight|depart|arrival|arrive|airport|seaplane|lhr|dfw|auh|doh|mle|doha|heathrow)/.test(txt)) return "flight";
+  if (/(transfer|pickup|pick up|drive)/.test(txt)) return "transfer";
+  return "hotel";
+}
+function detectRegionFromDay(d){
+  const hname = (d.hotel && d.hotel.name) ? (d.hotel.name+"") : "";
+  const txt = ((d.where||"")+" "+hname).toLowerCase();
+  if (txt.includes("maldives") || txt.includes("malé") || txt.includes("male") || txt.includes("mle")) return "Maldives";
+  if (txt.includes("dubai") || txt.includes("abu dhabi") || txt.includes("auh")) return "UAE";
+  return "Travel";
+}
+function hotelLabelFromDay(d){
+  if (d.hotel && d.hotel.name) return d.hotel.name;
+  return d.stay || "";
+}
+function renderBadgesAndHotel(d){
+  const type = detectDayTypeFromDay(d);
+  const region = detectRegionFromDay(d);
+  const hay = ((d.where||"")+" "+hotelLabelFromDay(d)).toLowerCase();
+  const isDesert = hay.includes("wathba") || hay.includes("desert");
+  const isMal = region==="Maldives";
+  const chips = [];
+  if (type==="flight") chips.push({cls:"flight", t:"✈️ Flying day"});
+  else if (type==="transfer") chips.push({cls:"transfer", t:"🚗 Transfer"});
+  else chips.push({cls:"hotel", t:"🏨 Hotel day"});
+  chips.push({cls: isMal ? "maldives" : (region==="UAE" ? "hotel" : "transfer"), t:"📍 "+region});
+  if (isDesert) chips.push({cls:"desert", t:"🏜️ Desert"});
+  if (isMal) chips.push({cls:"maldives", t:"🌊 Maldives"});
+
+  const badges = `<div class="badges">` + chips.map(c=>`<span class="badge ${c.cls}"><span class="dot"></span>${esc(c.t)}</span>`).join("") + `</div>`;
+
+  const h = hotelLabelFromDay(d);
+  let hotelLine = "";
+  if (h){
+    const room = (d.hotel && d.hotel.roomType) ? d.hotel.roomType : "";
+    const nights = (d.hotel && d.hotel.nights) ? d.hotel.nights : "";
+    const meta = [d.where||"", nights ? (nights+" night"+(nights===1?"":"s")) : "", room].filter(Boolean).join(" • ");
+    hotelLine = `<div class="hotelLine"><div class="hotelName">${esc(h)}</div><div class="hotelMeta">${esc(meta)}</div></div>`;
+  }
+  return {type, region, html: badges + hotelLine};
+}
+
+
+function renderDay() {
+  const d = TRIP.days[idx];
+  $("navMid").textContent = `Day ${d.day} • ${d.date}`;
+  $("heroTitle").textContent = d.title;
+  $("heroWhere").textContent = d.where;
+  // Safe v2: distinct day styling (never throws)
+  try{
+    const info = renderBadgesAndHotel(d);
+    const host = $("badgeHost");
+    if (host) host.innerHTML = info.html;
+    const view = $("viewDay");
+    if (view){ view.setAttribute("data-type", info.type); view.setAttribute("data-region", info.region); }
+  }catch(e){ /* ignore */ }
+
+
+  const tf = $("todayFocus");
+  if (tf) {
+    tf.textContent = (d.focus || "Travel Day");
+  }
+
+
+  const pills = $("pills");
+  pills.innerHTML = "";
+  [`📅 ${d.date}`, `📍 ${d.where}`, `🧭 Day ${d.day} of ${TRIP.days.length}`].forEach(p => {
+    const el = document.createElement("div");
+    el.className = "pill";
+    el.textContent = p;
+    pills.appendChild(el);
+  });
+
+  const agenda = $("agenda");
+  agenda.innerHTML = "";
+  d.agenda.forEach(s => {
+    const el = document.createElement("div");
+    el.className = "step";
+    el.innerHTML = `<div class="stepTop"><div class="stepTime">${esc(s.time)}</div><div class="stepTitle">${esc(s.title)}</div></div>
+                    <div class="stepDetails">${esc(s.details || "")}</div>`;
+    agenda.appendChild(el);
+  });
+
+  const tips = $("tips");
+  tips.innerHTML = "";
+  (d.tips || []).forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    tips.appendChild(li);
+  });
+
+  const dd = $("dayDetails");
+  if (dd) {
+    const lines = (d.details || []);
+    dd.innerHTML = lines.length ? lines.map(x => `<div style="margin-top:10px;line-height:1.45;">${esc(x)}</div>`).join("") : "No extra details for this day yet.";
+  }
+
+  // Playbook (If this happens, do this)
+  const pb = $("playbook");
+  if (pb) {
+    const p = d.playbook || {};
+    const keys = Object.keys(p);
+    if (!keys.length) { pb.innerHTML = "<div class='smallMeta'>No playbook set.</div>"; }
+    else {
+      pb.innerHTML = keys.map(k => {
+        const lis = (p[k] || []).map(x => `<li>${esc(x)}</li>`).join("");
+        return `<div class="section" style="border-top:none;padding-top:0;margin-top:10px;">
+                  <div class="smallCardTitle">${esc(k)}</div>
+                  <ul class="ul" style="margin-top:6px;">${lis}</ul>
+                </div>`;
+      }).join("");
+    }
+  }
+
+  // Transfer checks
+  const tc = $("transferChecks");
+  if (tc) {
+    tc.innerHTML = (d.transferChecks || []).map(x => `<li>${esc(x)}</li>`).join("");
+  }
+
+  // End-of-day check
+  const eod = $("endOfDay");
+  if (eod) {
+    eod.innerHTML = (d.endOfDay || []).map(x => `<li>${esc(x)}</li>`).join("");
+  }
+
+
+  $("noteBox").value = notes[d.day] || "";
+  $("noteBox").oninput = () => {
+    notes[d.day] = $("noteBox").value;
+    localStorage.setItem(KEY_NOTES, JSON.stringify(notes));
+  };
+
+  $("doneBox").checked = !!done[d.day];
+  setRing(idx, TRIP.days.length, !!done[d.day]);
+  renderNextUp(d);
+  renderActions(d);
+  renderPacking(d);
+  $("doneBox").onchange = () => {
+    done[d.day] = $("doneBox").checked;
+    localStorage.setItem(KEY_DONE, JSON.stringify(done));
+    setRing(idx, TRIP.days.length, !!done[d.day]);
+    toast(done[d.day] ? "Marked complete." : "Marked incomplete.");
+  };
+
+  if (d.hotel) {
+    $("hotelWrap").style.display = "block";
+    const h = d.hotel;
+    let html = `<div class="pills" style="margin-top:10px;">
+      <div class="pill">🏨 ${esc(h.name)}</div>
+      <div class="pill">🗓️ ${esc(h.stay)}</div>
+    </div>`;
+    if (h.room) html += `<div class="section"><div class="smallCardTitle">Room</div><div class="smallMeta">${esc(h.room)}</div></div>`;
+    html += listSection("Highlights", h.highlights);
+    html += listSection("Getting around", h.gettingAround);
+    html += listSection("All-inclusive reminders", h.allInclusive);
+    html += listSection("Local rules / norms", h.localRules);
+    if (h.package && h.package.packageName) {
+      html += `<div class="section"><div class="smallCardTitle">Package: ${esc(h.package.packageName)}</div></div>`;
+      html += listSection("Villa & minibar", h.package.villa);
+      html += listSection("Dining & drinks", h.package.dining);
+      html += listSection("Activities & wellness", h.package.activities);
+      html += listSection("Kids & family", h.package.family);
+      html += listSection("Resort services", h.package.services);
+      html += listSection("Notes", h.package.notes);
+
+    // Credits tracker (Atlantis)
+    html += renderCreditTracker(d);
+
+    if (h.emergency) {
+      html += `<div class="section"><div class="smallCardTitle">Emergency & Contacts</div></div>`;
+      if (h.emergency.phone) html += `<div class="smallMeta">Phone: ${esc(h.emergency.phone)}</div>`;
+      if (h.emergency.email) html += `<div class="smallMeta">Email: ${esc(h.emergency.email)}</div>`;
+      if (h.emergency.note) html += `<div class="smallMeta">${esc(h.emergency.note)}</div>`;
+    }
+
+    }
+
+    if (h.amenities) {
+      html += `<div class="section"><div class="smallCardTitle">Hotel amenities (Al Wathba)</div><div class="smallMeta">Quick reference for your stay.</div></div>`;
+      html += listSection("Turndown", h.amenities.turndown);
+      html += listSection("Entertainment", h.amenities.entertainment);
+      html += listSection("Accessible room features", h.amenities.accessibleRoomFeatures);
+      html += listSection("Hotel highlights", h.amenities.hotelHighlights);
+      html += listSection("Parking & transportation", h.amenities.parkingTransportation);
+      html += listSection("Services & amenities", h.amenities.servicesAmenities);
+    }
+
+    if (h.package) {
+      html += `<div class="section"><div class="smallCardTitle">Reservation</div><div class="smallMeta">Ref: ${esc(h.package.reference || "")}</div></div>`;
+      html += `<div class="section"><div class="smallCardTitle">Package</div><div class="smallMeta">${esc(h.package.packageName || "")}</div></div>`;
+      html += listSection("What’s included", h.package.packageDetails);
+      html += listSection("Exclusive direct benefits", h.package.exclusiveBenefits);
+      if (h.package.transfer) html += `<div class="section"><div class="smallCardTitle">Transfer</div><div class="smallMeta">${esc(h.package.transfer)}</div></div>`;
+      if (h.package.checkinPolicy) html += `<div class="section"><div class="smallCardTitle">Check‑in policy</div><div class="smallMeta">${esc(h.package.checkinPolicy)}</div></div>`;
+    }
+
+    $("hotelDetails").innerHTML = html;
+  } else {
+    $("hotelWrap").style.display = "none";
+    $("hotelDetails").innerHTML = "";
+  }
+  // Bind credits toggles if present
+  bindCreditTracker(d);
+}
+
+function prevDay() { idx = (idx - 1 + TRIP.days.length) % TRIP.days.length; renderDay();
+renderVaultChecklist(); }
+function nextDay() { idx = (idx + 1) % TRIP.days.length; renderDay(); }
+
+function renderTimeline() {
+  const q = ($("q").value || "").toLowerCase().trim();
+  const grid = $("timelineGrid");
+  grid.innerHTML = "";
+  TIMELINE.filter(x => !q || JSON.stringify(x).toLowerCase().includes(q)).forEach(item => {
+    const c = document.createElement("div");
+    c.className = "card pad";
+    c.innerHTML = `<div class="smallCardTitle">${esc(item.title)}</div><div class="smallMeta">${esc(item.when)} • ${esc(item.type.toUpperCase())}</div>`;
+    grid.appendChild(c);
+  });
+}
+
+function renderRules() {
+  const grid = $("rulesGrid");
+  grid.innerHTML = "";
+  Object.keys(RULES).forEach(k => {
+    const c = document.createElement("div");
+    c.className = "card pad";
+    const lis = RULES[k].map(x => `<li>${esc(x)}</li>`).join("");
+    c.innerHTML = `<div class="smallCardTitle">${esc(k)}</div><ul class="ul">${lis}</ul>`;
+    grid.appendChild(c);
+  });
+}
+
+
+function iconForDay(d){
+  const t = (JSON.stringify(d)||"").toLowerCase();
+  if (/(dfw|lhr|doh|auh|mle|airport|depart|arrival|arrive|flight|seaplane)/.test(t)) return "✈️";
+  if (/(transfer|pickup|uber|taxi|drive)/.test(t)) return "🚗";
+  if (d && d.hotel && d.hotel.name) return "🏨";
+  return "📍";
+}
+function regionTag(d){
+  const r = (d.region || "").toLowerCase();
+  if (r.includes("uae")) return "🕌 UAE";
+  if (r.includes("maldives")) return "🌊 Maldives";
+  if (r.includes("travel")) return "🧳 Travel";
+  // fallback by where
+  const w = ((d.where||"")+" "+((d.hotel&&d.hotel.name)?d.hotel.name:"")).toLowerCase();
+  if (w.includes("dubai")||w.includes("abu dhabi")) return "🕌 UAE";
+  if (w.includes("maldives")||w.includes("malé")||w.includes("male")||w.includes("mle")) return "🌊 Maldives";
+  return "🧳 Travel";
+}
+function primaryAnchor(d){
+  if (d.hotel && d.hotel.name) return d.hotel.name;
+  // try a nice short anchor from where
+  const w = (d.where||"").split("·")[0].trim();
+  return w || (d.title||("Day "+d.day));
+}
+function renderOverview(){
+  const grid = $("overviewGrid");
+  const list = $("overviewDays");
+  if (!grid || !list) return;
+
+  // Build blocks by grouping consecutive days with same primary anchor OR same region when no hotel.
+  const days = TRIP.days || [];
+  const blocks = [];
+  let cur = null;
+
+  function pushCur(){ if (cur) blocks.push(cur); cur=null; }
+
+  days.forEach(d=>{
+    const key = (d.hotel && d.hotel.name) ? ("H:" + d.hotel.name) : ("R:" + (d.region||"Travel"));
+    if (!cur){
+      cur = { key, startDay:d.day, endDay:d.day, startDate:d.date, endDate:d.date, title: primaryAnchor(d), region: regionTag(d), icon: iconForDay(d), days:[d] };
+      return;
+    }
+    if (cur.key === key){
+      cur.endDay = d.day;
+      cur.endDate = d.date;
+      cur.days.push(d);
+    }else{
+      pushCur();
+      cur = { key, startDay:d.day, endDay:d.day, startDate:d.date, endDate:d.date, title: primaryAnchor(d), region: regionTag(d), icon: iconForDay(d), days:[d] };
+    }
+  });
+  pushCur();
+
+  grid.innerHTML = blocks.map(b=>{
+    const range = (b.startDay===b.endDay) ? `Day ${b.startDay}` : `Days ${b.startDay}–${b.endDay}`;
+    const dateRange = (b.startDate===b.endDate) ? b.startDate : `${b.startDate} → ${b.endDate}`;
+    const where = b.days.map(d=>d.where).filter(Boolean)[0] || "";
+    const tags = [b.region, (b.days.some(d=>d.movingDay) ? "⚡ Moving" : "🛌 Stay")].filter(Boolean);
+    return `
+      <div class="oBlock" data-day="${b.startDay}">
+        <div class="oTop">
+          <div class="oTitle">${esc(b.icon)} ${esc(b.title)}</div>
+          <div class="oRange">${esc(range)}</div>
+        </div>
+        <div class="oMeta">${esc(dateRange)}${where?(" • "+esc(where)):""}</div>
+        <div class="oTags">${tags.map(t=>`<span class="badge ${t.includes("UAE")?"desert":t.includes("Maldives")?"maldives":"hotel"}"><span class="dot"></span>${esc(t)}</span>`).join("")}</div>
+      </div>
+    `;
+  }).join("");
+
+  grid.querySelectorAll(".oBlock").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const day = parseInt(el.getAttribute("data-day"),10);
+      if (isFinite(day)){ CURRENT_DAY = day; renderDay(); setTab("tabDay"); }
+    });
+  });
+
+  // All days list
+  list.innerHTML = days.map(d=>{
+    const icon = iconForDay(d);
+    const hotel = (d.hotel && d.hotel.name) ? d.hotel.name : "";
+    const bits = [hotel, d.where].filter(Boolean).join(" • ");
+    return `
+      <div class="oDayRow" data-day="${d.day}">
+        <div class="qTop">
+          <div class="qDay">${esc(icon)} Day ${d.day} — ${esc(d.title||"")}</div>
+          <div class="smallMeta">${esc(d.date||"")}</div>
+        </div>
+        <div class="qMeta">${esc(bits)}</div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".oDayRow").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const day = parseInt(el.getAttribute("data-day"),10);
+      if (isFinite(day)){ CURRENT_DAY = day; renderDay();  }
+    });
+  });
+}
+
+function setTab(which) {
+  document.body.classList.toggle("dayImmersive", which==="tabDay");
+  ["tabOverview","tabDay","tabToolsTab"].forEach(id => $(id).classList.remove("active"));
+  $(which).classList.add("active");
+  $("viewOverview").style.display = which==="tabOverview" ? "block" : "none";
+  $("viewDay").style.display = which==="tabDay" ? "block" : "none";
+  if (which==="tabDay") { try{ renderDay(); }catch(e){} }
+  try{ updateCheckinUI(); }catch(e){}
+      if (which==="tabOverview") renderOverview();
+    if (which==="tabRules") { renderRules(); renderVaultChecklist(); }
+}
+
+// Bind UI
+$("prev").onclick = prevDay;
+$("next").onclick = nextDay;
+$("bPrev").onclick = prevDay;
+$("bNext").onclick = nextDay;
+// Overview binds
+$("tabOverview").onclick = () => setTab("tabOverview");
+$("tabDay").onclick = () => setTab("tabDay");
+$("tabToolsTab").onclick = () => { showTools(); };
+
+$("btnOverviewJump").onclick = () => openModal();
+
+// Default tab
+setTab("tabOverview");
+
+function openModal() {
+  const m = $("modal");
+  const body = $("modalBody");
+  body.innerHTML = "";
+  TRIP.days.forEach(d => {
+    const div = document.createElement("div");
+    div.className = "dayItem";
+    div.innerHTML = `<div class="dayItemTop"><div class="dayItemTitle">Day ${d.day}: ${esc(d.title)}</div><div style="color:var(--accent);font-weight:950;">${esc(d.date)}</div></div>
+                     <div class="dayItemMeta">${esc(d.where)}</div>`;
+    div.onclick = () => {
+      idx = TRIP.days.findIndex(x => x.day === d.day);
+      renderDay();
+      closeModal();
+    };
+    body.appendChild(div);
+  });
+  m.style.display = "block";
+}
+function closeModal() { $("modal").style.display = "none"; }
+$("bPick").onclick = openModal;
+$("closeModal").onclick = closeModal;
+$("modal").onclick = (e) => { if (e.target && e.target.id === "modal") closeModal(); };
+
+$("tabDay").onclick = ()=> setTab("tabDay");
+$("tabTimeline").onclick = ()=> setTab("tabTimeline");
+$("tabRules").onclick = ()=> setTab("tabRules");
+$("q").addEventListener("input", renderTimeline);
+
+// Swipe on day card
+let x0 = null;
+$("viewDay").addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, {passive:true});
+$("viewDay").addEventListener("touchend", (e) => {
+  if (x0 === null) return;
+  const x1 = e.changedTouches[0].clientX;
+  const dx = x1 - x0;
+  x0 = null;
+  if (Math.abs(dx) < 50) return;
+  if (dx < 0) nextDay(); else prevDay();
+}, {passive:true});
+
+// Mark JS OK
+try {
+  const b = $("statusBadge");
+  b.textContent = "JS: OK";
+  b.classList.add("ok");
+} catch (e) { }
+
+renderDay();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+  });
+}
+
+/* === Safe enhancements init (v1) === */
+const KEY_INTRO = "nyx_intro_seen_v1";
+function setNetChip(){
+  const online = navigator.onLine;
+  const light = $("netLight");
+  const txt = $("netText");
+  if (txt) txt.textContent = online ? "Online" : "Offline";
+  if (light){
+    light.classList.toggle("on", !!online);
+    light.classList.toggle("off", !online);
+  }
+}
+window.addEventListener("online", setNetChip);
+window.addEventListener("offline", setNetChip);
+
+function showIntro(){
+  const overlay = document.getElementById("introOverlay");
+  if (!overlay) return;
+  overlay.style.display = "block";
+
+  const slides = [
+    {t:"Welcome aboard", b:"This is your trip command center. It runs online-first, but it won’t die when Wi‑Fi gets stupid."},
+    {t:"Use Day View", b:"Day View keeps you oriented. Flip days, check your flights, and keep the ‘next move’ obvious."},
+    {t:"Save what matters", b:"Keep confirmations, hotel info, and emergency numbers here. This is your ‘no-signal’ lifeline."},
+    {t:"You’re in control", b:"You can always skip this intro. We’ll keep making the app prettier without breaking it."},
+  ];
+  let i = 0;
+
+  const title = document.getElementById("introTitle");
+  const body = document.getElementById("introBody");
+  const dots = document.getElementById("introDots");
+  const back = document.getElementById("introBackBtn");
+  const next = document.getElementById("introNextBtn");
+  const skip = document.getElementById("introSkipBtn");
+
+  const render = () => {
+    const s = slides[i];
+    if (title) title.textContent = s.t;
+    if (body) body.textContent = s.b;
+    if (dots){
+      dots.innerHTML = slides.map((_, idx)=>{
+        const on = idx===i;
+        return `<div style="width:${on?18:8}px;height:8px;border-radius:999px;background:${on?"rgba(106,169,255,.95)":"rgba(255,255,255,.18)"};"></div>`;
+      }).join("");
+    }
+    if (back) back.disabled = i===0;
+    if (next) next.textContent = (i===slides.length-1) ? "Let’s go" : "Next";
+  };
+
+  if (skip) skip.onclick = () => { overlay.style.display = "none"; localStorage.setItem(KEY_INTRO, "1"); };
+  if (back) back.onclick = () => { i = Math.max(0, i-1); render(); };
+  if (next) next.onclick = () => {
+    if (i < slides.length-1){ i++; render(); return; }
+    overlay.style.display = "none";
+    localStorage.setItem(KEY_INTRO, "1");
+  };
+
+  render();
+}
+
+window.addEventListener("load", () => {
+  setNetChip();
+  if (!localStorage.getItem(KEY_INTRO)) setTimeout(showIntro, 250);
+});
+
+
+
+/* === Safe v7: Tools (FX + Check-In) + Quick Itinerary === */
+const KEY_FX = "nyx_fx_rates_v1";
+const KEY_CI = "nyx_checkins_v1";
+const DEFAULT_RATES = { AED: 0.2723, MVR: 0.0648, USD: 1.0 }; // editable defaults
+
+function loadRates(){
+  try{ return Object.assign({}, DEFAULT_RATES, JSON.parse(localStorage.getItem(KEY_FX)||"{}")); }
+  catch(_){ return Object.assign({}, DEFAULT_RATES); }
+}
+function saveRates(r){ localStorage.setItem(KEY_FX, JSON.stringify(r)); }
+
+function parseNum(v){
+  if (!v) return NaN;
+  const x = (""+v).replace(/[^0-9.\-]/g,"");
+  return parseFloat(x);
+}
+function fmtMoney(n){
+  if (!isFinite(n)) return "—";
+  return n.toLocaleString(undefined,{maximumFractionDigits:2});
+}
+
+function fxFillRatesUI(){
+  const r = loadRates();
+  const a = document.getElementById("rateAED");
+  const m = document.getElementById("rateMVR");
+  if (a) a.value = r.AED;
+  if (m) m.value = r.MVR;
+}
+function fxRecalc(){
+  const amt = parseNum(document.getElementById("fxAmount")?.value);
+  const from = document.getElementById("fxFrom")?.value || "AED";
+  const rates = loadRates();
+  const resEl = document.getElementById("fxResult");
+  if (!resEl) return;
+  if (!isFinite(amt)){ resEl.textContent = "—"; return; }
+  const usd = amt * (rates[from] || 1.0);
+  const aed = usd / (rates["AED"] || DEFAULT_RATES.AED);
+  const mvr = usd / (rates["MVR"] || DEFAULT_RATES.MVR);
+  resEl.innerHTML = `<div style="font-weight:1100;">$${fmtMoney(usd)} USD</div>` +
+                    `<div class="smallMeta" style="margin-top:4px;">≈ ${fmtMoney(aed)} AED · ${fmtMoney(mvr)} MVR</div>`;
+}
+
+function showTools(){
+  const o = document.getElementById("toolsOverlay");
+  if (!o) return;
+  o.style.display="block";
+  fxFillRatesUI();
+  fxRecalc();
+  updateLatestCheckin();
+  renderTimezones();
+  renderChecklist();
+}
+function hideTools(){
+  const o = document.getElementById("toolsOverlay");
+  if (o) o.style.display="none";
+}
+
+function loadCheckins(){
+  try{ return JSON.parse(localStorage.getItem(KEY_CI)||"{}") || {}; }
+  catch(_){ return {}; }
+}
+function saveCheckins(obj){ localStorage.setItem(KEY_CI, JSON.stringify(obj)); }
+
+function currentDayObj(){
+  try{
+    const d = TRIP.days.find(x=>x.day===CURRENT_DAY);
+    return d || TRIP.days[0];
+  }catch(_){ return TRIP.days[0]; }
+}
+
+function updateLatestCheckin(){
+  const ci = loadCheckins();
+  const entries = Object.entries(ci).map(([k,v])=>({day:parseInt(k,10), ...v}))
+                    .sort((a,b)=> new Date(b.t)-new Date(a.t));
+  const el = document.getElementById("ciLatest");
+  if (!el) return;
+  if (!entries.length){ el.textContent = "—"; return; }
+  const top = entries[0];
+  const dt = new Date(top.t);
+  el.textContent = `Day ${top.day}: ${top.title || ""} — ${dt.toLocaleString()}`;
+}
+
+function updateCheckinUI(){
+  const d = currentDayObj();
+  const ci = loadCheckins();
+  const chip = document.getElementById("ciStatusChip");
+  if (!chip) return;
+  const rec = ci[String(d.day)];
+  if (!rec){ chip.style.display="none"; return; }
+  const dt = new Date(rec.t);
+  chip.style.display="inline-flex";
+  chip.textContent = "Checked in · " + dt.toLocaleString();
+}
+
+function doCheckIn(){
+  const d = currentDayObj();
+  const now = new Date();
+  const ci = loadCheckins();
+  ci[String(d.day)] = { t: now.toISOString(), title: d.title || ("Day "+d.day), where: d.where || "" };
+  saveCheckins(ci);
+  try{ toast("Checked in."); }catch(_){}
+  updateCheckinUI();
+  updateLatestCheckin();
+}
+
+function buildShareLink(){
+  const ci = loadCheckins();
+  const payload = JSON.stringify({v:1, ci});
+  const b64 = btoa(unescape(encodeURIComponent(payload)));
+  const url = new URL(location.href);
+  url.hash = "status=" + b64;
+  return url.toString();
+}
+
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); try{ toast("Copied."); }catch(_){ } }
+  catch(e){ prompt("Copy this link:", t); }
+}
+
+function applyStatusFromHash(){
+  if (!location.hash.startsWith("#status=")) return false;
+  try{
+    const b64 = location.hash.slice(8);
+    const payload = decodeURIComponent(escape(atob(b64)));
+    const obj = JSON.parse(payload);
+    if (obj && obj.ci){
+      saveCheckins(obj.ci);
+      return true;
+    }
+  }catch(_){}
+  return false;
+}
+
+/* Quick itinerary */
+function tagBadgesForQuick(d){
+  const txt = ((d.title||"")+" "+(d.where||"")+" "+(d.subtitle||"")).toLowerCase();
+  const tags = [];
+  if (/(flight|airport|seaplane|depart|arrival|arrive|dfw|lhr|auh|doh|mle)/.test(txt)) tags.push("✈️ Flight");
+  if (/(transfer|pickup|drive)/.test(txt)) tags.push("🚗 Transfer");
+  if ((d.hotel && d.hotel.name) || d.stay) tags.push("🏨 Stay");
+  const w = ((d.where||"")+" "+((d.hotel&&d.hotel.name)?d.hotel.name:"")).toLowerCase();
+  if (w.includes("dubai")||w.includes("abu dhabi")||w.includes("auh")) tags.push("🕌 UAE");
+  if (w.includes("maldives")||w.includes("malé")||w.includes("male")||w.includes("mle")) tags.push("🌊 Maldives");
+  return tags;
+}
+
+function renderQuickList(){
+  const q = (document.getElementById("quickSearch")?.value || "").toLowerCase().trim();
+  const host = document.getElementById("quickList");
+  if (!host) return;
+  const days = (TRIP && TRIP.days) ? TRIP.days : [];
+  const filtered = days.filter(d=>{
+    if (!q) return true;
+    const hay = JSON.stringify(d).toLowerCase();
+    return hay.includes(q);
+  });
+  host.innerHTML = filtered.map(d=>{
+    const hotel = (d.hotel && d.hotel.name) ? d.hotel.name : (d.stay||"");
+    const bits = [hotel, d.where].filter(Boolean).join(" • ");
+    const tags = tagBadgesForQuick(d);
+    return `
+      <div class="qRow" data-day="${d.day}">
+        <div class="qTop">
+          <div class="qDay">Day ${d.day} — ${esc(d.title || "")}</div>
+          <div class="smallMeta">Tap</div>
+        </div>
+        <div class="qMeta">${esc(bits)}</div>
+        <div class="qTags">${tags.map(t=>`<span class="badge ${t.includes("Flight")?"flight":t.includes("Maldives")?"maldives":t.includes("UAE")?"desert":"hotel"}"><span class="dot"></span>${esc(t)}</span>`).join("")}</div>
+      </div>`;
+  }).join("");
+  host.querySelectorAll(".qRow").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const day = parseInt(el.getAttribute("data-day"),10);
+      if (isFinite(day)){
+        try{ CURRENT_DAY = day; }catch(_){}
+        try{ renderDay(); }catch(_){}
+      }
+      hideQuick();
+    });
+  });
+}
+
+function showQuick(){
+  const o = document.getElementById("quickOverlay");
+  if (!o) return;
+  o.style.display="block";
+  renderQuickList();
+  document.getElementById("quickSearch")?.focus();
+}
+function hideQuick(){
+  const o = document.getElementById("quickOverlay");
+  if (o) o.style.display="none";
+}
+
+
+/* Timezones + Checklist */
+const KEY_CHK = "nyx_checklist_v1";
+const DEFAULT_CHECKLIST = [
+  "Passport(s) + copies",
+  "Wallet/cards + travel-friendly card",
+  "Phone chargers + power bank",
+  "Plug adapters (UAE/UK style)",
+  "Sunglasses + sunscreen",
+  "Swimwear + sandals",
+  "Medications + basics (ibuprofen, band-aids)",
+  "AirTags / trackers (luggage)",
+  "Confirm tomorrow’s pickups",
+  "Charge everything overnight"
+];
+
+function loadChecklist(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(KEY_CHK)||"null");
+    if (saved && Array.isArray(saved.items)) return saved;
+  }catch(_){}
+  return { items: DEFAULT_CHECKLIST.map(t=>({t, done:false})) };
+}
+function saveChecklist(state){ localStorage.setItem(KEY_CHK, JSON.stringify(state)); }
+
+function renderChecklist(){
+  const host = document.getElementById("chkList");
+  if (!host) return;
+  const state = loadChecklist();
+  host.innerHTML = state.items.map((it, i)=>`
+    <label style="display:flex; gap:10px; align-items:flex-start; padding:10px 10px; border-radius:14px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.06); margin-bottom:8px; cursor:pointer;">
+      <input type="checkbox" ${it.done?"checked":""} data-i="${i}" style="margin-top:3px; transform:scale(1.15);">
+      <span style="font-weight:900; color: rgba(232,238,247,.86); line-height:1.25;">${esc(it.t)}</span>
+    </label>
+  `).join("");
+  host.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener("change", ()=>{
+      const idx = parseInt(cb.getAttribute("data-i"),10);
+      const s = loadChecklist();
+      if (s.items[idx]) s.items[idx].done = cb.checked;
+      saveChecklist(s);
+    });
+  });
+}
+
+function fmtTZ(tz){
+  try{
+    return new Date().toLocaleString(undefined, { timeZone: tz, hour:'2-digit', minute:'2-digit', weekday:'short', month:'short', day:'2-digit' });
+  }catch(_){ return "—"; }
+}
+function renderTimezones(){
+  const home = document.getElementById("tzHome");
+  const uae  = document.getElementById("tzUAE");
+  const mdv  = document.getElementById("tzMDV");
+  if (home) home.textContent = fmtTZ("America/Chicago");
+  if (uae)  uae.textContent  = fmtTZ("Asia/Dubai");
+  if (mdv)  mdv.textContent  = fmtTZ("Indian/Maldives");
+}
+
+
+/* === Safe v11: Tools paging === */
+function setToolPage(name){
+  const pages = document.querySelectorAll('#toolsOverlay .toolPage');
+  pages.forEach(p=> p.classList.toggle('active', p.getAttribute('data-tool')===name));
+  const btns = document.querySelectorAll('#toolsNav .tbtn');
+  btns.forEach(b=> b.classList.toggle('active', b.getAttribute('data-tool')===name));
+  // When switching tools, ensure converters/timezones render
+  try{ if (name==="tz") renderTimezones(); }catch(e){}
+  try{ if (name==="chk") renderChecklist(); }catch(e){}
+  try{ if (name==="checkin") updateLatestCheckin(); }catch(e){}
+  try{ if (name==="fx") fxRecalc(); }catch(e){}
+}
+
+window.addEventListener("load", ()=>{
+  // Apply shared status if link contains it
+  applyStatusFromHash();
+  updateCheckinUI();
+  updateLatestCheckin();
+
+  // Tools wiring
+    document.getElementById("btnToolsClose")?.addEventListener("click", hideTools);
+  document.querySelectorAll("#toolsNav .tbtn").forEach(b=>{
+    b.addEventListener("click", ()=> setToolPage(b.getAttribute("data-tool")));
+  });
+  setToolPage("fx");
+  document.getElementById("fxAmount")?.addEventListener("input", fxRecalc);
+  document.getElementById("fxFrom")?.addEventListener("change", fxRecalc);
+
+  document.getElementById("btnSaveRates")?.addEventListener("click", ()=>{
+    const r = loadRates();
+    const a = parseNum(document.getElementById("rateAED")?.value);
+    const m = parseNum(document.getElementById("rateMVR")?.value);
+    if (isFinite(a)) r.AED = a;
+    if (isFinite(m)) r.MVR = m;
+    saveRates(r);
+    fxRecalc();
+    try{ toast("Rates saved."); }catch(_){}
+  });
+  document.getElementById("btnResetRates")?.addEventListener("click", ()=>{
+    saveRates(DEFAULT_RATES);
+    fxFillRatesUI();
+    fxRecalc();
+    try{ toast("Rates reset."); }catch(_){}
+  });
+
+  document.getElementById("btnCheckIn")?.addEventListener("click", doCheckIn);
+  document.getElementById("btnShareStatus")?.addEventListener("click", ()=> copyText(buildShareLink()));
+  document.getElementById("btnResetChecklist")?.addEventListener("click", ()=>{ localStorage.removeItem(KEY_CHK); renderChecklist(); try{ toast("Checklist reset."); }catch(_){ } });
+
+  document.getElementById("btnClearCheckins")?.addEventListener("click", ()=>{
+    localStorage.removeItem(KEY_CI);
+    updateCheckinUI();
+    updateLatestCheckin();
+    try{ toast("Cleared."); }catch(_){}
+  });
+
+  // Quick wiring
+    document.getElementById("btnQuickClose")?.addEventListener("click", hideQuick);
+  document.getElementById("quickSearch")?.addEventListener("input", renderQuickList);
+});
+
+
+</script>
+
+
+<!-- Welcome Intro (safe, skipable) -->
+<div id="introOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.55); backdrop-filter: blur(10px);">
+  <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:18px;">
+    <div class="card" style="max-width:560px; width:min(560px, 100%);">
+      <div class="hero">
+        <div class="heroInner">
+          <div style="min-width:0;">
+            <div class="titleText" style="font-size:26px; line-height:1.05;">Welcome to your vacation.</div>
+            <div class="sub" style="opacity:.85; margin-top:6px;">Dubai and Back Again — your trip companion (online-first, offline-proof).</div>
+          </div>
+          <button class="btn" id="introSkipBtn" style="border-radius:999px; padding:8px 10px; background:rgba(255,255,255,.10);">Skip</button>
+        </div>
+      </div>
+      <div class="pad" style="padding-top:14px;">
+        <div class="smallCardTitle" id="introTitle" style="font-size:16px;">Let’s set you up</div>
+        <div class="smallMeta" id="introBody" style="font-size:14px; line-height:1.45; margin-top:8px;"></div>
+        <div style="display:flex; gap:8px; justify-content:center; margin-top:14px;" id="introDots"></div>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button class="btn" id="introBackBtn" style="flex:1;">Back</button>
+          <button class="btn primary" id="introNextBtn" style="flex:1;">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+</div>
+
+
+
+<!-- Tools Overlay (converter + check-in share) -->
+<div id="toolsOverlay" style="display:none; position:fixed; inset:0; z-index:9997; background:rgba(0,0,0,.55); backdrop-filter: blur(10px);">
+  <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:18px;">
+    <div class="card" style="max-width:620px; width:min(620px, 100%);">
+      <div class="pad" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <div>
+          <div class="smallCardTitle" style="font-size:16px;">Tools</div>
+          <div class="smallMeta" style="margin-top:4px;">Fast utilities that work offline.</div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;"><button class="btn" id="btnToolsQuick" style="border-radius:999px; padding:8px 10px; background:rgba(255,255,255,.10);">📋 Quick</button><button class="btn" id="btnToolsClose" style="border-radius:999px; padding:8px 10px; background:rgba(255,255,255,.10);">Close</button></div>
+      </div>
+      <div class="toolsShell">
+  <div class="pad" style="padding-top:0;">
+    <div class="toolsNav" id="toolsNav">
+      <button class="tbtn active" data-tool="fx">FX</button>
+      <button class="tbtn" data-tool="checkin">Check‑in</button>
+      <button class="tbtn" data-tool="tz">Time</button>
+      <button class="tbtn" data-tool="chk">Checklist</button>
+      <button class="tbtn" data-tool="emg">Emergency</button>
+    </div>
+  </div>
+  <div class="toolsBody">
+
+        <div class="section">
+          <h3>Currency Converter</h3>
+          <div class="smallMeta">Default: convert AED/MVR → USD. Rates are editable and saved locally.</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+            <div class="hotelLine" style="margin:0;">
+              <div class="hotelName">Amount</div>
+              <input id="fxAmount" inputmode="decimal" placeholder="e.g., 900" style="margin-top:8px; width:100%; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.10); color:rgba(232,238,247,.92); font-weight:900;">
+            </div>
+            <div class="hotelLine" style="margin:0;">
+              <div class="hotelName">From</div>
+              <select id="fxFrom" style="margin-top:8px; width:100%; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.10); color:rgba(232,238,247,.92); font-weight:900;">
+                <option value="AED">AED (UAE Dirham)</option>
+                <option value="MVR">MVR (Maldives Rufiyaa)</option>
+                <option value="USD">USD (US Dollar)</option>
+              </select>
+            </div>
+          </div>
+          <div class="hotelLine" style="margin-top:10px;">
+            <div class="hotelName">Result</div>
+            <div class="hotelMeta" id="fxResult" style="margin-top:6px; font-size:15px; font-weight:1000;">—</div>
+          </div>
+
+          <details style="margin-top:10px;">
+            <summary>Rates (edit)</summary>
+            <div class="pad" style="padding-top:10px;">
+              <div class="smallMeta">Rates are “USD per 1 unit” (e.g., 1 AED → 0.27 USD). Keep it simple.</div>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                <div class="hotelLine" style="margin:0;">
+                  <div class="hotelName">AED → USD</div>
+                  <input id="rateAED" inputmode="decimal" style="margin-top:8px; width:100%; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.10); color:rgba(232,238,247,.92); font-weight:900;">
+                </div>
+                <div class="hotelLine" style="margin:0;">
+                  <div class="hotelName">MVR → USD</div>
+                  <input id="rateMVR" inputmode="decimal" style="margin-top:8px; width:100%; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.10); color:rgba(232,238,247,.92); font-weight:900;">
+                </div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:12px;">
+                <button class="btn primary" id="btnSaveRates" style="flex:1;">Save rates</button>
+                <button class="btn" id="btnResetRates" style="flex:1;">Reset defaults</button>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        
+        <div class="section" style="margin-top:16px;">
+          <h3>Time Zones</h3>
+          <div class="smallMeta">Quick sanity check across home + local.</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-top:10px;">
+            <div class="hotelLine" style="margin:0;">
+              <div class="hotelName">Chicago (Home)</div>
+              <div class="hotelMeta" id="tzHome" style="margin-top:6px; font-weight:1100;">—</div>
+            </div>
+            <div class="hotelLine" style="margin:0;">
+              <div class="hotelName">UAE (Dubai/Abu Dhabi)</div>
+              <div class="hotelMeta" id="tzUAE" style="margin-top:6px; font-weight:1100;">—</div>
+            </div>
+            <div class="hotelLine" style="margin:0;">
+              <div class="hotelName">Maldives</div>
+              <div class="hotelMeta" id="tzMDV" style="margin-top:6px; font-weight:1100;">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" style="margin-top:16px;">
+          <h3>Checklist</h3>
+          <div class="smallMeta">Simple travel checklist (saved locally).</div>
+          <details style="margin-top:10px;">
+            <summary>Packing & essentials</summary>
+            <div class="pad" style="padding-top:10px;">
+              <div id="chkList"></div>
+              <button class="btn" id="btnResetChecklist" style="margin-top:12px; width:100%;">Reset checklist</button>
+            </div>
+          </details>
+        </div>
+
+        </div>
+<div class="toolPage" data-tool="emg">
+<div class="section" style="margin-top:16px;">
+          <h3>Emergency Quick Panel</h3>
+          <div class="smallMeta">One-tap essentials when things get spicy.</div>
+          <details style="margin-top:10px;">
+            <summary>UAE</summary>
+            <div class="pad" style="padding-top:10px;">
+              <ul class="ul">
+                <li><b>Police / Emergency:</b> 999</li>
+                <li><b>Ambulance:</b> 998</li>
+                <li><b>Fire:</b> 997</li>
+              </ul>
+              <div class="smallMeta">Keep hotel front desk numbers inside each hotel card too.</div>
+            </div>
+          </details>
+          <details style="margin-top:10px;">
+            <summary>Maldives</summary>
+            <div class="pad" style="padding-top:10px;">
+              <ul class="ul">
+                <li><b>Police / Emergency:</b> 119</li>
+                <li><b>Ambulance:</b> 102</li>
+                <li><b>Fire:</b> 118</li>
+              </ul>
+            </div>
+          </details>
+          <details style="margin-top:10px;">
+            <summary>US (Home)</summary>
+            <div class="pad" style="padding-top:10px;">
+              <ul class="ul"><li><b>Emergency:</b> 911</li></ul>
+            </div>
+          </details>
+        </div>
+
+<div class="section" style="margin-top:16px;">
+          <h3>Family Check-In</h3>
+          <div class="smallMeta">Tap “Check in” on a day to record you made it. Use “Copy share link” to send an updated status page to family (no backend, no notifications).</div>
+          <div class="hotelLine" style="margin-top:10px;">
+            <div class="hotelName">Latest check-in</div>
+            <div class="hotelMeta" id="ciLatest" style="margin-top:6px;">—</div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <button class="btn primary" id="btnShareStatus" style="flex:1;">Copy share link</button>
+            <button class="btn" id="btnClearCheckins" style="flex:1;">Clear</button>
+          </div>
+          <div class="smallMeta" style="margin-top:10px;">How it works: the link encodes your check-ins. When you check in again, copy a new link and resend.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Itinerary Overlay -->
+<div id="quickOverlay" style="display:none; position:fixed; inset:0; z-index:9996; background:rgba(0,0,0,.55); backdrop-filter: blur(10px);">
+  <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:18px;">
+    <div class="card" style="max-width:720px; width:min(720px, 100%); max-height: 85vh; overflow:hidden;">
+      <div class="pad" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <div>
+          <div class="smallCardTitle" style="font-size:16px;">Quick Itinerary</div>
+          <div class="smallMeta" style="margin-top:4px;">Fast scan: tap a day to jump.</div>
+        </div>
+        <button class="btn" id="btnQuickClose" style="border-radius:999px; padding:8px 10px; background:rgba(255,255,255,.10);">Close</button>
+      </div>
+      <div class="pad" style="padding-top:0;">
+        <input id="quickSearch" placeholder="Search (e.g., Atlantis, Malé, flight)" style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.10); color:rgba(232,238,247,.92); font-weight:900;">
+      </div>
+      <div class="pad" id="quickList" style="padding-top:0; overflow:auto; max-height: calc(85vh - 160px);"></div>
+    </div>
+  </div>
+</div>
+
+</body></html>
